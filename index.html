@@ -998,7 +998,7 @@ async function renderDashboard() {
   document.getElementById('d-run-t').textContent = entry.pace ? entry.pace + ' min/km' : '';
 
   // Push-up streak on dashboard
-  const puStreak = calcPushupStreak();
+  const puStreak = await calcPushupStreak();
   const puToday = getPushupData()[new Date().toISOString().slice(0,10)] || 0;
   const streakEl = document.getElementById('d-pushup-streak');
   if (streakEl) {
