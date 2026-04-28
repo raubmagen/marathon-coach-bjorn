@@ -958,7 +958,7 @@ function ampelText(c) {
 
 // ── Dashboard ─────────────────────────────────────────────────────────────
 async function renderDashboard() {
-  const entries = getEntries();
+  const entries = await getEntries();
   const today = new Date().toISOString().slice(0,10);
   const todayEntry = entries.find(e => e.date === today);
   const lastEntry = entries.sort((a,b) => b.date.localeCompare(a.date))[0];
