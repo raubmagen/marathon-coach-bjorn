@@ -1064,7 +1064,10 @@ async function renderHistory() {
       <td>${e.pace || '—'}</td>
       <td>${e.knee ? kneePill(e.knee) : '—'}</td>
       <td><span class="pill ${pillClass}">${pillText}</span></td>
-      <td><button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="deleteEntry('${e.date}')">✕</button></td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-secondary" style="padding:3px 8px;font-size:11px" onclick="editEntry('${e.date}')">✏️</button>
+        <button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="deleteEntry('${e.date}')">✕</button>
+      </td>
     </tr>`;
   }).join('');
 }
@@ -1073,6 +1076,52 @@ function kneePill(v) {
   if (n >= 8) return `<span class="pill pill-green">${v}/10</span>`;
   if (n >= 5) return `<span class="pill pill-amber">${v}/10</span>`;
   return `<span class="pill pill-red">${v}/10</span>`;
+}
+async function editEntry(date) {
+  const entries = await getEntries();
+  const e = entries.find(x => x.date === date);
+  if (!e) return;
+
+  // Switch to log view and fill in all fields
+  showView('log');
+  document.getElementById('f-date').value = e.date;
+
+  // Garmin fields
+  const setRange = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) { el.value = val || el.defaultValue; document.getElementById(id+'-v').textContent = el.value; }
+  };
+  setRange('f-bb', e.bb);
+  setRange('f-sleep', e.sleep);
+  setRange('f-ready', e.ready);
+  setRange('f-stress', e.stress);
+  setRange('f-rpe', e.rpe);
+  setRange('f-knee', e.knee);
+  setRange('f-shin', e.shin);
+
+  const setInput = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+  setInput('f-rhr', e.rhr);
+  setInput('f-hrv', e.hrv);
+  setInput('f-dist', e.dist);
+  setInput('f-dur', e.dur);
+  setInput('f-pace', e.pace);
+  setInput('f-weight', e.weight);
+  setInput('f-notes', e.notes);
+
+  // Training type
+  const typeEl = document.getElementById('f-type');
+  if (typeEl && e.type) {
+    typeEl.value = e.type;
+    toggleStrengthBlock(e.type);
+  }
+  if (e.type && e.type.toLowerCase().includes('kraft')) {
+    setInput('f-sets', e.sets);
+    setInput('f-mainex', e.mainex);
+    setInput('f-maxkg', e.maxkg);
+    setInput('f-exercises', e.exercises);
+  }
+
+  showToast('Eintrag vom ' + date + ' geladen — jetzt bearbeiten & speichern ✏️', 'success');
 }
 async function deleteEntry(date) {
   if (!confirm('Eintrag vom ' + date + ' löschen?')) return;
