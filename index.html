@@ -327,6 +327,11 @@ tr:hover td { background: var(--bg3); }
           <div class="metric-trend">Ziel: 88 kg</div>
         </div>
         <div class="metric">
+          <div class="metric-label">Wasser 💧</div>
+          <div class="metric-val" id="d-water">—<span class="metric-unit">L</span></div>
+          <div class="metric-trend">Ziel: 3L</div>
+        </div>
+        <div class="metric">
           <div class="metric-label">Letzter Lauf</div>
           <div class="metric-val" id="d-run">—<span class="metric-unit">km</span></div>
           <div class="metric-trend" id="d-run-t"></div>
@@ -481,6 +486,13 @@ tr:hover td { background: var(--bg3); }
           <div class="form-group">
             <label>Gewicht <span>(kg, optional)</span></label>
             <input type="number" id="f-weight" placeholder="105" step="0.1" min="50" max="200">
+          </div>
+          <div class="form-group">
+            <label>Wasser <span>(Liter, Ziel: 3L)</span></label>
+            <div class="range-row">
+              <input type="range" min="0" max="5" step="0.25" value="0" id="f-water" oninput="document.getElementById('f-water-v').textContent=this.value+'L'">
+              <span class="range-val" id="f-water-v" style="min-width:36px">0L</span>
+            </div>
           </div>
           <div class="form-group">
             <label>Knie rechts <span>(1=Schmerz, 10=OK)</span></label>
@@ -994,6 +1006,13 @@ async function renderDashboard() {
   document.getElementById('d-rhr').innerHTML = (entry.rhr || '—') + '<span class="metric-unit">bpm</span>';
   document.getElementById('d-stress').innerHTML = (entry.stress || '—');
   document.getElementById('d-weight').innerHTML = (entry.weight || '—') + '<span class="metric-unit">kg</span>';
+  // Water
+  const waterEl = document.getElementById('d-water');
+  if (waterEl) {
+    const w = parseFloat(entry.water) || 0;
+    waterEl.innerHTML = w + '<span class="metric-unit">L</span>';
+    waterEl.closest('.metric').className = 'metric ' + (w >= 3 ? 'green' : w >= 2 ? 'amber' : 'red');
+  }
   document.getElementById('d-run').innerHTML = (entry.dist || '—') + '<span class="metric-unit">km</span>';
   document.getElementById('d-run-t').textContent = entry.pace ? entry.pace + ' min/km' : '';
 
@@ -1028,6 +1047,7 @@ async function saveEntry() {
     pace: document.getElementById('f-pace').value,
     rpe: document.getElementById('f-rpe').value,
     weight: document.getElementById('f-weight').value,
+    water: document.getElementById('f-water').value,
     knee: document.getElementById('f-knee').value,
     shin: document.getElementById('f-shin').value,
     notes: document.getElementById('f-notes').value,
@@ -1107,6 +1127,11 @@ async function editEntry(date) {
   setInput('f-pace', e.pace);
   setInput('f-weight', e.weight);
   setInput('f-notes', e.notes);
+  // Water
+  if (e.water) {
+    const wEl = document.getElementById('f-water');
+    if (wEl) { wEl.value = e.water; document.getElementById('f-water-v').textContent = e.water + 'L'; }
+  }
 
   // Training type
   const typeEl = document.getElementById('f-type');
