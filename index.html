@@ -278,7 +278,10 @@ tr:hover td { background: var(--bg3); }
 
     <!-- ══ DASHBOARD ══ -->
     <div id="view-dashboard" class="view active">
-      <div class="page-title">Dashboard</div>
+      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.25rem">
+        <div class="page-title">Dashboard</div>
+        <button class="btn btn-secondary" onclick="renderDashboard()" style="padding:4px 12px;font-size:12px">↻ Aktualisieren</button>
+      </div>
       <div class="page-sub" id="dash-date">Heute</div>
 
       <div id="dash-ampel" class="ampel green" style="display:none">
@@ -806,7 +809,8 @@ function showApp() {
   const emailShort = currentUser?.email?.split('@')[0] || '';
   document.getElementById('sidebar-user').textContent = '👤 ' + emailShort;
   updateCountdown();
-  renderDashboard();
+  // Small delay to ensure auth is fully set before querying Supabase
+  setTimeout(() => renderDashboard(), 300);
 }
 
 async function doLogin() {
