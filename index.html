@@ -208,7 +208,8 @@ tr:hover td { background: var(--bg3); }
   .nav-item.active { border-top-color: var(--accent); border-left-color: transparent; color: var(--text); }
   .nav-icon { font-size: 18px; }
   .main { padding: 0.75rem; padding-bottom: 80px; display: block; width: 100%; overflow-x: hidden; box-sizing: border-box; }
-  .grid-2, .grid-3, .grid-4 { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; gap: 0.5rem; }
+  #dash-metrics { grid-template-columns: repeat(2, 1fr) !important; }
   .metric, .card { overflow: hidden; }
   .metric-val { font-size: 22px; }
   .metric-label { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
