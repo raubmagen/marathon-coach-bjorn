@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marathon Coach — Björn 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg: #0d1117;
+  --bg2: #161b22;
+  --bg3: #21262d;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.15);
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #484f58;
+  --accent: #3b82f6;
+  --accent2: #1d4ed8;
+  --green: #22c55e;
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --green-bg: rgba(34,197,94,0.1);
+  --amber-bg: rgba(245,158,11,0.1);
+  --red-bg: rgba(239,68,68,0.1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Barlow', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; }
+h1,h2,h3,h4 { font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.02em; }
+
+/* ── Layout ── */
+.app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+.sidebar { background: var(--bg2); border-right: 1px solid var(--border); padding: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; }
+.main { padding: 2rem; overflow-x: hidden; }
+
+/* ── Sidebar ── */
+.sidebar-header { padding: 1.5rem 1.25rem 1rem; border-bottom: 1px solid var(--border); }
+.sidebar-logo { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: 0.05em; line-height: 1.1; }
+.sidebar-logo span { color: var(--accent); }
+.sidebar-sub { font-size: 12px; color: var(--text3); margin-top: 3px; }
+.sidebar-nav { flex: 1; padding: 1rem 0; }
+.nav-section { padding: 0 1rem; margin-bottom: 0.25rem; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 1.25rem; cursor: pointer; color: var(--text2); font-size: 14px; transition: all 0.15s; border-left: 2px solid transparent; margin: 1px 0; }
+.nav-item:hover { color: var(--text); background: var(--bg3); }
+.nav-item.active { color: var(--text); background: var(--bg3); border-left-color: var(--accent); }
+.nav-icon { font-size: 16px; width: 18px; text-align: center; }
+.sidebar-footer { padding: 1rem 1.25rem; border-top: 1px solid var(--border); }
+.countdown-box { background: var(--bg3); border-radius: 8px; padding: 0.75rem; text-align: center; }
+.countdown-num { font-family: 'Barlow Condensed', sans-serif; font-size: 32px; font-weight: 700; color: var(--accent); line-height: 1; }
+.countdown-label { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.race-date { font-size: 11px; color: var(--text2); margin-top: 4px; }
+
+/* ── Views ── */
+.view { display: none; }
+.view.active { display: block; }
+.page-title { font-size: 28px; font-weight: 700; color: var(--text); margin-bottom: 0.25rem; }
+.page-sub { font-size: 14px; color: var(--text2); margin-bottom: 1.75rem; }
+
+/* ── Cards ── */
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; }
+.card-title { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
+
+/* ── Metric cards ── */
+.metric { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; }
+.metric-label { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.metric-val { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 600; line-height: 1.1; }
+.metric-unit { font-size: 13px; font-weight: 400; color: var(--text2); margin-left: 2px; }
+.metric-trend { font-size: 11px; color: var(--text3); margin-top: 3px; }
+.metric.green .metric-val { color: var(--green); }
+.metric.amber .metric-val { color: var(--amber); }
+.metric.red .metric-val { color: var(--red); }
+.metric.blue .metric-val { color: var(--accent); }
+
+/* ── Ampel ── */
+.ampel { display: flex; align-items: center; gap: 8px; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.25rem; }
+.ampel.green { background: var(--green-bg); border: 1px solid rgba(34,197,94,0.2); }
+.ampel.amber { background: var(--amber-bg); border: 1px solid rgba(245,158,11,0.2); }
+.ampel.red { background: var(--red-bg); border: 1px solid rgba(239,68,68,0.2); }
+.ampel-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.ampel.green .ampel-dot { background: var(--green); }
+.ampel.amber .ampel-dot { background: var(--amber); }
+.ampel.red .ampel-dot { background: var(--red); }
+.ampel-text { font-size: 14px; font-weight: 500; }
+.ampel.green .ampel-text { color: var(--green); }
+.ampel.amber .ampel-text { color: var(--amber); }
+.ampel.red .ampel-text { color: var(--red); }
+.ampel-sub { font-size: 13px; color: var(--text2); margin-left: auto; }
+
+/* ── Form ── */
+.form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group.half { grid-column: span 2; }
+label { font-size: 12px; color: var(--text2); font-weight: 500; }
+label span { font-size: 11px; color: var(--text3); font-weight: 400; }
+input, select, textarea {
+  background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px;
+  color: var(--text); padding: 8px 10px; font-size: 14px; font-family: 'Barlow', sans-serif;
+  outline: none; transition: border-color 0.15s; width: 100%;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+select option { background: var(--bg3); }
+textarea { resize: vertical; min-height: 60px; }
+.range-row { display: flex; align-items: center; gap: 10px; }
+.range-row input[type=range] { flex: 1; accent-color: var(--accent); }
+.range-val { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 600; color: var(--accent); min-width: 28px; text-align: right; }
+.btn { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 0.05em; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.15s; text-transform: uppercase; }
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: var(--accent2); }
+.btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border2); }
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+.btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+.btns { display: flex; gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap; }
+
+/* ── AI Response ── */
+.ai-box { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; margin-top: 1.25rem; }
+.ai-box-header { display: flex; align-items: center; gap: 8px; margin-bottom: 0.75rem; }
+.ai-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.ai-title { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; }
+.ai-content { font-size: 14px; color: var(--text2); line-height: 1.7; white-space: pre-wrap; }
+.ai-content.loading { color: var(--text3); font-style: italic; }
+
+/* ── Table ── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 8px 12px; color: var(--text3); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: middle; }
+tr:hover td { background: var(--bg3); }
+.td-date { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; color: var(--text); font-size: 14px; }
+.pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+.pill-green { background: var(--green-bg); color: var(--green); }
+.pill-amber { background: var(--amber-bg); color: var(--amber); }
+.pill-red { background: var(--red-bg); color: var(--red); }
+.pill-blue { background: rgba(59,130,246,0.1); color: var(--accent); }
+.pill-gray { background: var(--bg3); color: var(--text3); }
+
+/* ── Chart ── */
+.chart-wrap { position: relative; width: 100%; height: 200px; }
+
+/* ── Section divider ── */
+.section-sep { height: 1px; background: var(--border); margin: 1.5rem 0; }
+.section-label { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; }
+
+/* ── Empty state ── */
+.empty { text-align: center; padding: 3rem; color: var(--text3); }
+.empty-icon { font-size: 40px; margin-bottom: 1rem; opacity: 0.4; }
+.empty-text { font-size: 14px; }
+
+/* ── Push-ups ── */
+.pushup-counter { display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 2rem; }
+.pushup-big { font-family: 'Barlow Condensed', sans-serif; font-size: 96px; font-weight: 700; color: var(--accent); line-height: 1; }
+.pushup-controls { display: flex; gap: 0.75rem; align-items: center; }
+.btn-round { width: 52px; height: 52px; border-radius: 50%; border: 2px solid var(--border2); background: var(--bg3); color: var(--text); font-size: 24px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.btn-round:hover { border-color: var(--accent); color: var(--accent); }
+.btn-round.big { width: 68px; height: 68px; font-size: 32px; background: var(--accent); color: white; border-color: var(--accent); }
+.btn-round.big:hover { background: var(--accent2); border-color: var(--accent2); }
+.streak-display { display: flex; gap: 0.5rem; align-items: center; justify-content: center; margin-top: 0.5rem; }
+.streak-flame { font-size: 28px; }
+.streak-num { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 700; color: var(--amber); }
+.streak-label { font-size: 13px; color: var(--text3); }
+.goggins-quote { font-size: 13px; color: var(--text3); font-style: italic; text-align: center; padding: 0 2rem; line-height: 1.6; border-left: 2px solid var(--accent); margin: 0.5rem 1.5rem; padding: 0.5rem 1rem; }
+.pushup-history-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text2); }
+.pushup-history-row:last-child { border-bottom: none; }
+.pushup-day-done { color: var(--green); font-weight: 600; }
+.pushup-day-zero { color: var(--red); }
+
+/* ── Ernährung ── */
+.meal-entry { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; }
+.meal-entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+.meal-time { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600; color: var(--accent); }
+.meal-kcal { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; color: var(--amber); }
+.meal-text { font-size: 13px; color: var(--text2); margin-bottom: 0.5rem; }
+.macro-pills { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.macro-pill { font-size: 11px; padding: 2px 8px; border-radius: 12px; font-weight: 600; }
+.macro-p { background: rgba(59,130,246,0.15); color: var(--accent); }
+.macro-c { background: rgba(245,158,11,0.15); color: var(--amber); }
+.macro-f { background: rgba(239,68,68,0.15); color: var(--red); }
+.daily-totals { background: var(--bg3); border: 1px solid var(--border2); border-radius: 10px; padding: 1rem 1.25rem; display: flex; gap: 2rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.total-item { text-align: center; }
+.total-val { font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 700; }
+.total-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; }
+.kcal-bar { background: var(--bg3); border-radius: 6px; height: 8px; margin-bottom: 1.25rem; overflow: hidden; }
+.kcal-bar-fill { height: 100%; border-radius: 6px; transition: width 0.5s ease; background: linear-gradient(90deg, var(--green), var(--amber)); }
+.meal-input-row { display: flex; gap: 0.75rem; align-items: flex-end; }
+.meal-input-row textarea { flex: 1; min-height: 48px; }
+.meal-input-row .btn { flex-shrink: 0; height: 48px; align-self: flex-end; }
+
+/* ── Toast ── */
+.toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--bg2); border: 1px solid var(--border2); border-radius: 8px; padding: 0.75rem 1.25rem; font-size: 14px; color: var(--text); z-index: 100; transform: translateY(100px); opacity: 0; transition: all 0.3s; }
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-color: rgba(34,197,94,0.4); color: var(--green); }
+.toast.error { border-color: rgba(239,68,68,0.4); color: var(--red); }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { position: fixed; bottom: 0; left: 0; right: 0; height: auto; flex-direction: row; border-right: none; border-top: 1px solid var(--border); z-index: 50; }
+  .sidebar-header, .sidebar-footer { display: none; }
+  .sidebar-nav { display: flex; flex-direction: row; padding: 0; overflow-x: auto; }
+  .nav-section { display: none; }
+  .nav-item { flex-direction: column; gap: 2px; padding: 10px 16px; border-left: none; border-top: 2px solid transparent; font-size: 11px; white-space: nowrap; }
+  .nav-item.active { border-top-color: var(--accent); border-left-color: transparent; }
+  .main { padding: 1rem; padding-bottom: 5rem; }
+  .grid-3, .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .form-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN OVERLAY -->
+<div id="login-overlay" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;">
+  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:2.5rem;width:100%;max-width:380px;text-align:center">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;margin-bottom:0.25rem">Marathon<span style="color:var(--accent)">Coach</span></div>
+    <div style="font-size:13px;color:var(--text3);margin-bottom:2rem">Björn Schwarz • FFM 2026</div>
+    <div id="login-error" style="display:none;color:var(--red);font-size:13px;margin-bottom:1rem;padding:0.5rem;background:var(--red-bg);border-radius:6px"></div>
+    <div style="display:flex;flex-direction:column;gap:0.75rem">
+      <input type="email" id="login-email" placeholder="E-Mail" style="text-align:center">
+      <input type="password" id="login-pw" placeholder="Passwort" style="text-align:center">
+      <button class="btn btn-primary" onclick="doLogin()" style="width:100%">Einloggen</button>
+      <button class="btn btn-secondary" onclick="doSignup()" style="width:100%;font-size:13px">Neu registrieren</button>
+      <button class="btn btn-secondary" onclick="doMagicLink()" style="width:100%;font-size:12px;color:var(--text3)">✉️ Magic Link (kein Passwort)</button>
+    </div>
+    <div id="login-msg" style="display:none;color:var(--green);font-size:13px;margin-top:1rem"></div>
+  </div>
+</div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">Marathon<span>Coach</span></div>
+      <div class="sidebar-sub">Björn Schwarz • FFM 2026</div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section" style="margin-top:0.75rem">Navigation</div>
+      <div class="nav-item active" onclick="showView('dashboard')">
+        <span class="nav-icon">◈</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="showView('log')">
+        <span class="nav-icon">＋</span> Tageseintrag
+      </div>
+      <div class="nav-item" onclick="showView('history')">
+        <span class="nav-icon">≡</span> Verlauf
+      </div>
+      <div class="nav-item" onclick="showView('charts')">
+        <span class="nav-icon">◎</span> Charts
+      </div>
+      <div class="nav-item" onclick="showView('pushups')">
+        <span class="nav-icon">💪</span> Push-ups
+      </div>
+      <div class="nav-item" onclick="showView('ernaehrung')">
+        <span class="nav-icon">🍽️</span> Ernährung
+      </div>
+      <div class="nav-item" onclick="showView('settings')">
+        <span class="nav-icon">◉</span> Einstellungen
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:0.5rem;text-align:center" id="sidebar-user"></div>
+      <div class="countdown-box">
+        <div class="countdown-num" id="sidebar-countdown">—</div>
+        <div class="countdown-label">Tage bis FFM</div>
+        <div class="race-date">18. Okt 2026</div>
+      </div>
+      <button class="btn btn-secondary" onclick="doLogout()" style="width:100%;margin-top:0.5rem;font-size:12px">Ausloggen</button>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div id="view-dashboard" class="view active">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub" id="dash-date">Heute</div>
+
+      <div id="dash-ampel" class="ampel green" style="display:none">
+        <div class="ampel-dot"></div>
+        <div class="ampel-text" id="ampel-text">GUT</div>
+        <div class="ampel-sub" id="ampel-sub"></div>
+      </div>
+
+      <div class="grid-4" id="dash-metrics">
+        <div class="metric blue">
+          <div class="metric-label">Body Battery</div>
+          <div class="metric-val" id="d-bb">—<span class="metric-unit"></span></div>
+          <div class="metric-trend" id="d-bb-t"></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Sleep Score</div>
+          <div class="metric-val" id="d-sleep">—</div>
+          <div class="metric-trend" id="d-sleep-t"></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Bereitschaft</div>
+          <div class="metric-val" id="d-ready">—</div>
+          <div class="metric-trend" id="d-ready-t"></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">HRV</div>
+          <div class="metric-val" id="d-hrv">—<span class="metric-unit">ms</span></div>
+          <div class="metric-trend">Baseline: 49 ms</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Ruhe-HF</div>
+          <div class="metric-val" id="d-rhr">—<span class="metric-unit">bpm</span></div>
+          <div class="metric-trend">Baseline: 46 bpm</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Stress</div>
+          <div class="metric-val" id="d-stress">—</div>
+          <div class="metric-trend">&lt;30 = gut</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Gewicht</div>
+          <div class="metric-val" id="d-weight">—<span class="metric-unit">kg</span></div>
+          <div class="metric-trend">Ziel: 88 kg</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Letzter Lauf</div>
+          <div class="metric-val" id="d-run">—<span class="metric-unit">km</span></div>
+          <div class="metric-trend" id="d-run-t"></div>
+        </div>
+        <div class="metric blue">
+          <div class="metric-label">Push-up Streak</div>
+          <div class="metric-val" id="d-pushup-streak">—<span class="metric-unit">🔥</span></div>
+          <div class="metric-trend" id="d-pushup-today">Heute: — Reps</div>
+        </div>
+      </div>
+
+      <div id="ai-daily-box" class="ai-box" style="display:none">
+        <div class="ai-box-header">
+          <div class="ai-dot"></div>
+          <div class="ai-title">Claude — Empfehlung für heute</div>
+        </div>
+        <div class="ai-content" id="ai-daily-content"></div>
+      </div>
+
+      <div id="dash-empty" class="empty">
+        <div class="empty-icon">◎</div>
+        <div class="empty-text">Noch kein Eintrag für heute.<br>Geh zu <strong>Tageseintrag</strong> und trag deine Garmin-Daten ein.</div>
+        <div style="margin-top:1rem">
+          <button class="btn btn-primary" onclick="showView('log')">Eintrag erstellen ↗</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TAGESEINTRAG ══ -->
+    <div id="view-log" class="view">
+      <div class="page-title">Tageseintrag</div>
+      <div class="page-sub">Garmin-Screenshot abgelesen und hier eintragen — dauert 2 Minuten</div>
+
+      <div class="card">
+        <div class="section-label">Datum</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Datum</label>
+            <input type="date" id="f-date">
+          </div>
+        </div>
+
+        <div class="section-sep"></div>
+        <div class="section-label">Garmin Health — vom Screenshot ablesen</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Body Battery <span>(0–100)</span></label>
+            <div class="range-row">
+              <input type="range" min="0" max="100" value="66" id="f-bb" oninput="document.getElementById('f-bb-v').textContent=this.value">
+              <span class="range-val" id="f-bb-v">66</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Sleep Score <span>(0–100)</span></label>
+            <div class="range-row">
+              <input type="range" min="0" max="100" value="80" id="f-sleep" oninput="document.getElementById('f-sleep-v').textContent=this.value">
+              <span class="range-val" id="f-sleep-v">80</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Trainingsbereitschaft <span>(0–100)</span></label>
+            <div class="range-row">
+              <input type="range" min="0" max="100" value="70" id="f-ready" oninput="document.getElementById('f-ready-v').textContent=this.value">
+              <span class="range-val" id="f-ready-v">70</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Ruhe-Herzfrequenz <span>(bpm)</span></label>
+            <input type="number" id="f-rhr" placeholder="46" min="30" max="100">
+          </div>
+          <div class="form-group">
+            <label>Stress <span>(0–100)</span></label>
+            <div class="range-row">
+              <input type="range" min="0" max="100" value="20" id="f-stress" oninput="document.getElementById('f-stress-v').textContent=this.value">
+              <span class="range-val" id="f-stress-v">20</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>HRV <span>(ms, optional)</span></label>
+            <input type="number" id="f-hrv" placeholder="49" min="10" max="200">
+          </div>
+        </div>
+
+        <div class="section-sep"></div>
+        <div class="section-label">Training (nur ausfüllen wenn heute trainiert)</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Einheit</label>
+            <select id="f-type" onchange="toggleStrengthBlock(this.value)">
+              <option value="">— Ruhetag —</option>
+              <option>Easy Run</option>
+              <option>Tempo Run</option>
+              <option>Long Run</option>
+              <option>Intervall</option>
+              <option>Rad</option>
+              <option>Krafttraining Ganzkörper</option>
+              <option>Krafttraining Oberkörper</option>
+              <option>Krafttraining Unterkörper</option>
+              <option>Krafttraining Core</option>
+              <option>Rad</option>
+              <option>Yoga / Mobility</option>
+              <option>Sonstiges</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Distanz <span>(km, nur Laufen/Rad)</span></label>
+            <input type="number" id="f-dist" placeholder="10.5" step="0.1" min="0">
+          </div>
+          <div class="form-group">
+            <label>Dauer <span>(Minuten)</span></label>
+            <input type="number" id="f-dur" placeholder="62" min="0">
+          </div>
+          <div class="form-group">
+            <label>Ø Pace <span>(min:sec / km)</span></label>
+            <input type="text" id="f-pace" placeholder="6:13">
+          </div>
+          <div class="form-group">
+            <label>RPE — Anstrengung <span>(1–10)</span></label>
+            <div class="range-row">
+              <input type="range" min="1" max="10" value="6" id="f-rpe" oninput="document.getElementById('f-rpe-v').textContent=this.value">
+              <span class="range-val" id="f-rpe-v">6</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="strength-block" style="display:none">
+          <div class="section-sep"></div>
+          <div class="section-label">Krafttraining — Details</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Sätze gesamt</label>
+              <input type="number" id="f-sets" placeholder="15" min="1" max="60">
+            </div>
+            <div class="form-group">
+              <label>Schwerste Übung</label>
+              <input type="text" id="f-mainex" placeholder="z.B. Kniebeugen, Kreuzheben">
+            </div>
+            <div class="form-group">
+              <label>Max. Gewicht <span>(kg)</span></label>
+              <input type="number" id="f-maxkg" placeholder="80" step="2.5" min="0">
+            </div>
+            <div class="form-group full">
+              <label>Übungen <span>(kommagetrennt)</span></label>
+              <input type="text" id="f-exercises" placeholder="z.B. Squat, Deadlift, Rudern, Plank, Hip Thrust">
+            </div>
+          </div>
+        </div>
+
+        <div class="section-sep"></div>
+        <div class="section-label">Körper & Befinden</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Gewicht <span>(kg, optional)</span></label>
+            <input type="number" id="f-weight" placeholder="105" step="0.1" min="50" max="200">
+          </div>
+          <div class="form-group">
+            <label>Knie rechts <span>(1=Schmerz, 10=OK)</span></label>
+            <div class="range-row">
+              <input type="range" min="1" max="10" value="8" id="f-knee" oninput="document.getElementById('f-knee-v').textContent=this.value">
+              <span class="range-val" id="f-knee-v">8</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Schienbein links <span>(1=Schmerz, 10=OK)</span></label>
+            <div class="range-row">
+              <input type="range" min="1" max="10" value="9" id="f-shin" oninput="document.getElementById('f-shin-v').textContent=this.value">
+              <span class="range-val" id="f-shin-v">9</span>
+            </div>
+          </div>
+          <div class="form-group full">
+            <label>Notizen</label>
+            <textarea id="f-notes" placeholder="Wie hat sich der Lauf angefühlt? Besonderheiten?"></textarea>
+          </div>
+        </div>
+
+        <div class="btns">
+          <button class="btn btn-primary" onclick="saveEntry()">Eintrag speichern</button>
+          <button class="btn btn-secondary" onclick="getAIRecommendation()">Claude fragen ↗</button>
+        </div>
+      </div>
+
+      <div id="ai-rec-box" class="ai-box" style="display:none">
+        <div class="ai-box-header">
+          <div class="ai-dot"></div>
+          <div class="ai-title">Claude — Trainingsempfehlung</div>
+        </div>
+        <div class="ai-content" id="ai-rec-content"></div>
+      </div>
+    </div>
+
+    <!-- ══ VERLAUF ══ -->
+    <div id="view-history" class="view">
+      <div class="page-title">Trainingsverlauf</div>
+      <div class="page-sub" id="history-count">Alle Einträge</div>
+      <div class="card">
+        <div class="table-wrap">
+          <table id="history-table">
+            <thead>
+              <tr>
+                <th>Datum</th>
+                <th>BB</th>
+                <th>Schlaf</th>
+                <th>HRV</th>
+                <th>Einheit</th>
+                <th>km</th>
+                <th>Pace</th>
+                <th>Knie</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="history-body"></tbody>
+          </table>
+        </div>
+        <div id="history-empty" class="empty" style="display:none">
+          <div class="empty-icon">≡</div>
+          <div class="empty-text">Noch keine Einträge. Starte mit dem ersten Tageseintrag.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CHARTS ══ -->
+    <div id="view-charts" class="view">
+      <div class="page-title">Charts & Trends</div>
+      <div class="page-sub">Letzte 30 Tage</div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Body Battery & HRV</div>
+          <div class="chart-wrap"><canvas id="chart-bb" role="img" aria-label="Body Battery und HRV Verlauf">Verlaufsdaten.</canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Sleep Score</div>
+          <div class="chart-wrap"><canvas id="chart-sleep" role="img" aria-label="Schlafqualität Verlauf">Verlaufsdaten.</canvas></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Wöchentliche Laufkilometer</div>
+          <div class="chart-wrap"><canvas id="chart-km" role="img" aria-label="Wöchentliche Kilometer">Verlaufsdaten.</canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Gewichtsverlauf</div>
+          <div class="chart-wrap"><canvas id="chart-weight" role="img" aria-label="Gewichtsverlauf">Verlaufsdaten.</canvas></div>
+        </div>
+      </div>
+      <div id="charts-empty" class="empty" style="display:none">
+        <div class="empty-icon">◎</div>
+        <div class="empty-text">Noch nicht genug Daten für Charts.<br>Ab 3 Einträgen werden Charts angezeigt.</div>
+      </div>
+    </div>
+
+    <!-- ══ PUSH-UPS ══ -->
+    <div id="view-pushups" class="view">
+      <div class="page-title">Push-ups</div>
+      <div class="page-sub">Der innere Goggins schaut zu 👀</div>
+
+      <div class="grid-2" style="margin-bottom:1.25rem">
+        <div class="card" style="text-align:center">
+          <div class="card-title">Heute</div>
+          <div class="pushup-counter">
+            <div class="pushup-big" id="pu-today-count">0</div>
+            <div class="pushup-controls">
+              <button class="btn-round" onclick="adjustPushups(-10)" title="-10">−10</button>
+              <button class="btn-round" onclick="adjustPushups(-1)" title="-1">−</button>
+              <button class="btn-round big" onclick="adjustPushups(1)" title="+1">+</button>
+              <button class="btn-round" onclick="adjustPushups(10)" title="+10">+10</button>
+            </div>
+            <div style="display:flex;gap:1rem;margin-top:0.5rem">
+              <button class="btn btn-secondary" onclick="setPushupPreset(20)">+20</button>
+              <button class="btn btn-secondary" onclick="setPushupPreset(50)">+50</button>
+              <button class="btn btn-secondary" onclick="setPushupPreset(100)">+100</button>
+              <button class="btn btn-danger" onclick="resetTodayPushups()" style="padding:10px 14px">↺</button>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="savePushups()" style="margin-top:0.5rem;width:80%">Speichern ✓</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Streak & Stats</div>
+          <div class="pushup-counter" style="gap:0.75rem">
+            <div class="streak-display">
+              <span class="streak-flame">🔥</span>
+              <span class="streak-num" id="pu-streak">0</span>
+              <span class="streak-label">Tage in Folge</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;width:100%">
+              <div style="text-align:center;padding:0.75rem;background:var(--bg3);border-radius:8px">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--green)" id="pu-total">0</div>
+                <div style="font-size:11px;color:var(--text3)">GESAMT</div>
+              </div>
+              <div style="text-align:center;padding:0.75rem;background:var(--bg3);border-radius:8px">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--accent)" id="pu-avg">0</div>
+                <div style="font-size:11px;color:var(--text3)">Ø PRO TAG</div>
+              </div>
+              <div style="text-align:center;padding:0.75rem;background:var(--bg3);border-radius:8px">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--amber)" id="pu-best">0</div>
+                <div style="font-size:11px;color:var(--text3)">BESTER TAG</div>
+              </div>
+              <div style="text-align:center;padding:0.75rem;background:var(--bg3);border-radius:8px">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--red)" id="pu-days">0</div>
+                <div style="font-size:11px;color:var(--text3)">AKTIVE TAGE</div>
+              </div>
+            </div>
+            <div class="goggins-quote" id="pu-goggins-quote">„Die einzige Person, die dich aufhalten kann, bist du selbst."</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Letzte 14 Tage</div>
+        <div id="pu-history" style="padding:0.25rem 0"></div>
+      </div>
+    </div>
+
+    <!-- ══ ERNÄHRUNG ══ -->
+    <div id="view-ernaehrung" class="view">
+      <div class="page-title">Ernährungsprotokoll</div>
+      <div class="page-sub">Einfach reinschreiben — Claude rechnet die Kalorien</div>
+
+      <!-- Tages-Totals -->
+      <div class="daily-totals" id="ern-totals">
+        <div class="total-item">
+          <div class="total-val" id="ern-total-kcal" style="color:var(--amber)">0</div>
+          <div class="total-label">kcal</div>
+        </div>
+        <div class="total-item">
+          <div class="total-val" id="ern-total-p" style="color:var(--accent)">0g</div>
+          <div class="total-label">Protein</div>
+        </div>
+        <div class="total-item">
+          <div class="total-val" id="ern-total-c" style="color:var(--amber)">0g</div>
+          <div class="total-label">Carbs</div>
+        </div>
+        <div class="total-item">
+          <div class="total-val" id="ern-total-f" style="color:var(--red)">0g</div>
+          <div class="total-label">Fett</div>
+        </div>
+        <div class="total-item" style="margin-left:auto">
+          <div style="font-size:12px;color:var(--text3)">Tagesziel</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--text2)" id="ern-ziel-kcal">~2.200 kcal</div>
+        </div>
+      </div>
+      <div class="kcal-bar">
+        <div class="kcal-bar-fill" id="ern-kcal-bar" style="width:0%"></div>
+      </div>
+
+      <!-- Eingabe -->
+      <div class="card" style="margin-bottom:1.25rem">
+        <div class="card-title">Mahlzeit eintragen</div>
+        <div class="form-grid" style="margin-bottom:0.75rem">
+          <div class="form-group">
+            <label>Uhrzeit</label>
+            <input type="time" id="ern-time">
+          </div>
+          <div class="form-group">
+            <label>Mahlzeit</label>
+            <select id="ern-meal-type">
+              <option>Frühstück</option>
+              <option>Mittagessen</option>
+              <option>Abendessen</option>
+              <option>Snack</option>
+              <option>Pre-Workout</option>
+              <option>Post-Workout</option>
+            </select>
+          </div>
+        </div>
+        <div class="meal-input-row" style="margin-bottom:0.75rem">
+          <div class="form-group" style="flex:1;margin:0">
+            <label>Was hast du gegessen? <span>(einfach reinschreiben)</span></label>
+            <textarea id="ern-input" placeholder="z.B. Currywurst mit Pommes Schranke und Mayo, 0,5l Cola&#10;oder: Haferflocken 80g, Banane, Proteinshake 30g Whey"></textarea>
+          </div>
+        </div>
+        <div class="btns">
+          <button class="btn btn-primary" onclick="analyzeFood()">Claude analysieren lassen 🤖</button>
+          <button class="btn btn-secondary" onclick="addManualMeal()">Manuell eintragen</button>
+        </div>
+        <div id="ern-ai-box" class="ai-box" style="display:none;margin-top:1rem">
+          <div class="ai-box-header">
+            <div class="ai-dot"></div>
+            <div class="ai-title">Claude — Kalorien-Analyse</div>
+          </div>
+          <div class="ai-content" id="ern-ai-content"></div>
+        </div>
+      </div>
+
+      <!-- Mahlzeiten des Tages -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+          <div class="card-title" style="margin-bottom:0">Heute gegessen</div>
+          <div style="display:flex;gap:0.5rem;align-items:center">
+            <input type="date" id="ern-date" style="font-size:12px;padding:4px 8px">
+            <button class="btn btn-danger" style="padding:4px 10px;font-size:12px" onclick="clearDayMeals()">Tag löschen</button>
+          </div>
+        </div>
+        <div id="ern-meals-list">
+          <div class="empty">
+            <div class="empty-icon">🍽️</div>
+            <div class="empty-text">Noch nichts eingetragen heute.<br>Einfach oben eingeben und analysieren lassen!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ EINSTELLUNGEN ══ -->
+    <div id="view-settings" class="view">
+      <div class="page-title">Einstellungen</div>
+      <div class="page-sub">Claude API Key & Personalisierung</div>
+      <div class="card" style="margin-bottom:1rem">
+        <div class="section-label">Claude API Key</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;line-height:1.6">
+          Für die KI-Empfehlungen brauchst du einen Anthropic API Key.<br>
+          Holen unter: <a href="https://console.anthropic.com" style="color:var(--accent)">console.anthropic.com</a> → API Keys → Create Key<br>
+          Der Key wird nur lokal in deinem Browser gespeichert (localStorage).
+        </p>
+        <div class="form-group" style="max-width:400px">
+          <label>API Key</label>
+          <input type="password" id="s-apikey" placeholder="sk-ant-api03-...">
+        </div>
+        <div class="btns">
+          <button class="btn btn-primary" onclick="saveSettings()">Speichern</button>
+          <button class="btn btn-secondary" onclick="testAPI()">Verbindung testen</button>
+        </div>
+        <div id="api-status" style="margin-top:0.75rem;font-size:13px;display:none"></div>
+      </div>
+      <div class="card" style="margin-bottom:1rem">
+        <div class="section-label">Daten</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:1rem">Alle Daten werden lokal in deinem Browser gespeichert. Kein Server, kein Account.</p>
+        <div class="btns">
+          <button class="btn btn-secondary" onclick="exportData()">Daten exportieren (JSON)</button>
+          <button class="btn btn-danger" onclick="clearData()">Alle Daten löschen</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-label">Info</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.8">
+          Version 1.1 — Frankfurt Marathon 2026<br>
+          Renntag: 18. Oktober 2026<br>
+          Ziel: Sub-4h (3:59:59)<br>
+          Zielgewicht: 88 kg<br>
+          Erstellt mit Claude (Anthropic)
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const RACE_DATE = new Date('2026-10-18T09:00:00');
+
+// ── Supabase ───────────────────────────────────────────────────────────────
+const SUPA_URL = 'https://bivvolmamhfiqkdalafp.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpdnZvbG1hbWhmaXFrZGFsYWZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNzIxMTUsImV4cCI6MjA5Mjk0ODExNX0.UnPpQF3yeIz170yas4ga13Y9gMZUP6QBI-0moI7Gibg';
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+let currentUser = null;
+
+// ── Auth ───────────────────────────────────────────────────────────────────
+async function initAuth() {
+  const { data: { session } } = await supa.auth.getSession();
+  if (session?.user) {
+    currentUser = session.user;
+    showApp();
+  } else {
+    showLogin();
+  }
+  supa.auth.onAuthStateChange((_event, session) => {
+    if (session?.user) { currentUser = session.user; showApp(); }
+    else { currentUser = null; showLogin(); }
+  });
+}
+
+function showLogin() {
+  document.getElementById('login-overlay').style.display = 'flex';
+  document.querySelector('.app').style.display = 'none';
+}
+function showApp() {
+  document.getElementById('login-overlay').style.display = 'none';
+  document.querySelector('.app').style.display = 'grid';
+  const emailShort = currentUser?.email?.split('@')[0] || '';
+  document.getElementById('sidebar-user').textContent = '👤 ' + emailShort;
+  updateCountdown();
+  renderDashboard();
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw = document.getElementById('login-pw').value;
+  const { error } = await supa.auth.signInWithPassword({ email, password: pw });
+  if (error) showLoginError(error.message);
+}
+async function doSignup() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw = document.getElementById('login-pw').value;
+  if (pw.length < 6) { showLoginError('Passwort mindestens 6 Zeichen'); return; }
+  const { error } = await supa.auth.signUp({ email, password: pw });
+  if (error) showLoginError(error.message);
+  else showLoginMsg('✓ Registriert! Bitte E-Mail bestätigen, dann einloggen.');
+}
+async function doMagicLink() {
+  const email = document.getElementById('login-email').value.trim();
+  if (!email) { showLoginError('Bitte E-Mail eingeben'); return; }
+  const { error } = await supa.auth.signInWithOtp({ email });
+  if (error) showLoginError(error.message);
+  else showLoginMsg('✉️ Magic Link gesendet! Schau in dein E-Mail-Postfach.');
+}
+async function doLogout() {
+  await supa.auth.signOut();
+}
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg; el.style.display = 'block';
+}
+function showLoginMsg(msg) {
+  const el = document.getElementById('login-msg');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+// ── Storage — Entries ──────────────────────────────────────────────────────
+async function getEntries() {
+  if (!currentUser) return [];
+  const { data } = await supa.from('entries').select('*').eq('user_id', currentUser.id);
+  return (data || []).map(r => ({ ...r.data, _id: r.id, date: r.date }));
+}
+async function saveEntryToDb(entry) {
+  if (!currentUser) return;
+  const { data: existing } = await supa.from('entries').select('id').eq('user_id', currentUser.id).eq('date', entry.date);
+  if (existing && existing.length > 0) {
+    await supa.from('entries').update({ data: entry }).eq('id', existing[0].id);
+  } else {
+    await supa.from('entries').insert({ user_id: currentUser.id, date: entry.date, data: entry });
+  }
+}
+async function deleteEntryFromDb(date) {
+  if (!currentUser) return;
+  await supa.from('entries').delete().eq('user_id', currentUser.id).eq('date', date);
+}
+
+// ── Storage — Push-ups ─────────────────────────────────────────────────────
+async function getPushupData() {
+  if (!currentUser) return {};
+  const { data } = await supa.from('pushups').select('*').eq('user_id', currentUser.id);
+  const result = {};
+  (data || []).forEach(r => { result[r.date] = r.reps; });
+  return result;
+}
+async function savePushupDay(date, reps) {
+  if (!currentUser) return;
+  const { data: existing } = await supa.from('pushups').select('id').eq('user_id', currentUser.id).eq('date', date);
+  if (existing && existing.length > 0) {
+    await supa.from('pushups').update({ reps }).eq('id', existing[0].id);
+  } else {
+    await supa.from('pushups').insert({ user_id: currentUser.id, date, reps });
+  }
+}
+
+// ── Storage — Meals ────────────────────────────────────────────────────────
+async function getMeals() {
+  if (!currentUser) return {};
+  const { data } = await supa.from('meals').select('*').eq('user_id', currentUser.id);
+  const result = {};
+  (data || []).forEach(r => { result[r.date] = r.data; });
+  return result;
+}
+async function saveMealsForDate(date, meals) {
+  if (!currentUser) return;
+  const { data: existing } = await supa.from('meals').select('id').eq('user_id', currentUser.id).eq('date', date);
+  if (existing && existing.length > 0) {
+    await supa.from('meals').update({ data: meals }).eq('id', existing[0].id);
+  } else {
+    await supa.from('meals').insert({ user_id: currentUser.id, date, data: meals });
+  }
+}
+
+// Settings still localStorage (API key should stay local)
+function getSettings() {
+  try { return JSON.parse(localStorage.getItem('mc_settings') || '{}'); } catch { return {}; }
+}
+function saveSettingsData(s) { localStorage.setItem('mc_settings', JSON.stringify(s)); }
+
+
+// ── Navigation ────────────────────────────────────────────────────────────
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('view-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    const txt = n.textContent.toLowerCase();
+    if (
+      (id === 'dashboard' && txt.includes('dashboard')) ||
+      (id === 'log' && txt.includes('tages')) ||
+      (id === 'history' && txt.includes('verlauf')) ||
+      (id === 'charts' && txt.includes('chart')) ||
+      (id === 'pushups' && txt.includes('push')) ||
+      (id === 'ernaehrung' && txt.includes('ernähr')) ||
+      (id === 'settings' && txt.includes('einstell'))
+    ) n.classList.add('active');
+  });
+  if (id === 'dashboard') renderDashboard();
+  if (id === 'history') renderHistory();
+  if (id === 'charts') renderCharts();
+  if (id === 'settings') loadSettings();
+  if (id === 'pushups') renderPushups();
+  if (id === 'ernaehrung') renderErnaehrung();
+}
+
+// ── Countdown ─────────────────────────────────────────────────────────────
+function updateCountdown() {
+  const diff = RACE_DATE - new Date();
+  const days = Math.max(0, Math.floor(diff / 86400000));
+  document.getElementById('sidebar-countdown').textContent = days;
+}
+
+// ── Ampel logic ───────────────────────────────────────────────────────────
+function calcAmpel(bb, sleep, ready, hrv, rhr) {
+  const bbn = parseFloat(bb) || 0, sln = parseFloat(sleep) || 0, rdn = parseFloat(ready) || 0;
+  const hrvn = parseFloat(hrv) || 49, rhrn = parseFloat(rhr) || 46;
+  const overtrain = rhrn > 51;
+  if (bbn > 50 && sln > 75 && rdn > 60 && !overtrain && hrvn >= 44) return 'green';
+  if (bbn > 30 && sln > 65 && !overtrain) return 'amber';
+  return 'red';
+}
+function ampelText(c) {
+  if (c === 'green') return ['GUT — Volle Einheit', 'Alle Parameter im grünen Bereich'];
+  if (c === 'amber') return ['OK — Moderate Einheit', 'Intensität auf 70% reduzieren'];
+  return ['VORSICHT — Erholung', 'Nur Easy Run oder Pause heute'];
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────
+async function renderDashboard() {
+  const entries = getEntries();
+  const today = new Date().toISOString().slice(0,10);
+  const todayEntry = entries.find(e => e.date === today);
+  const lastEntry = entries.sort((a,b) => b.date.localeCompare(a.date))[0];
+  const entry = todayEntry || lastEntry;
+
+  const dash = document.getElementById('dash-date');
+  const fmt = new Date().toLocaleDateString('de-DE', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  dash.textContent = fmt;
+
+  if (!entry) {
+    document.getElementById('dash-empty').style.display = 'block';
+    document.getElementById('dash-ampel').style.display = 'none';
+    document.getElementById('ai-daily-box').style.display = 'none';
+    return;
+  }
+  document.getElementById('dash-empty').style.display = 'none';
+
+  const col = calcAmpel(entry.bb, entry.sleep, entry.ready, entry.hrv, entry.rhr);
+  const [at, as] = ampelText(col);
+  const ampelEl = document.getElementById('dash-ampel');
+  ampelEl.className = 'ampel ' + col;
+  ampelEl.style.display = 'flex';
+  document.getElementById('ampel-text').textContent = at;
+  document.getElementById('ampel-sub').textContent = todayEntry ? 'Heute' : `Letzter Eintrag: ${entry.date}`;
+
+  const set = (id, val, unit='') => { const el = document.getElementById(id); if(el) el.innerHTML = val ? val + (unit ? `<span class="metric-unit">${unit}</span>` : '') : '—'; };
+  document.getElementById('d-bb').innerHTML = (entry.bb || '—') + '<span class="metric-unit"></span>';
+  const bbCard = document.getElementById('d-bb').closest('.metric');
+  bbCard.className = 'metric ' + (entry.bb > 60 ? 'green' : entry.bb > 35 ? 'amber' : 'red');
+  document.getElementById('d-sleep').innerHTML = (entry.sleep || '—');
+  document.getElementById('d-ready').innerHTML = (entry.ready || '—');
+  document.getElementById('d-hrv').innerHTML = (entry.hrv || '—') + '<span class="metric-unit">ms</span>';
+  document.getElementById('d-rhr').innerHTML = (entry.rhr || '—') + '<span class="metric-unit">bpm</span>';
+  document.getElementById('d-stress').innerHTML = (entry.stress || '—');
+  document.getElementById('d-weight').innerHTML = (entry.weight || '—') + '<span class="metric-unit">kg</span>';
+  document.getElementById('d-run').innerHTML = (entry.dist || '—') + '<span class="metric-unit">km</span>';
+  document.getElementById('d-run-t').textContent = entry.pace ? entry.pace + ' min/km' : '';
+
+  // Push-up streak on dashboard
+  const puStreak = calcPushupStreak();
+  const puToday = getPushupData()[new Date().toISOString().slice(0,10)] || 0;
+  const streakEl = document.getElementById('d-pushup-streak');
+  if (streakEl) {
+    streakEl.innerHTML = puStreak + '<span class="metric-unit">🔥</span>';
+    document.getElementById('d-pushup-today').textContent = 'Heute: ' + puToday + ' Reps';
+  }
+
+  if (entry.aiRec) {
+    document.getElementById('ai-daily-box').style.display = 'block';
+    document.getElementById('ai-daily-content').textContent = entry.aiRec;
+  }
+}
+
+// ── Save Entry ─────────────────────────────────────────────────────────────
+async function saveEntry() {
+  const entry = {
+    date: document.getElementById('f-date').value || new Date().toISOString().slice(0,10),
+    bb: document.getElementById('f-bb').value,
+    sleep: document.getElementById('f-sleep').value,
+    ready: document.getElementById('f-ready').value,
+    rhr: document.getElementById('f-rhr').value,
+    stress: document.getElementById('f-stress').value,
+    hrv: document.getElementById('f-hrv').value,
+    type: document.getElementById('f-type').value,
+    dist: document.getElementById('f-dist').value,
+    dur: document.getElementById('f-dur').value,
+    pace: document.getElementById('f-pace').value,
+    rpe: document.getElementById('f-rpe').value,
+    weight: document.getElementById('f-weight').value,
+    knee: document.getElementById('f-knee').value,
+    shin: document.getElementById('f-shin').value,
+    notes: document.getElementById('f-notes').value,
+    ts: Date.now()
+  };
+  showToast('Speichern...', '');
+  await saveEntryToDb(entry);
+  showToast('Eintrag gespeichert ✓', 'success');
+}
+
+// ── History ────────────────────────────────────────────────────────────────
+async function renderHistory() {
+  const entries = (await getEntries()).sort((a,b) => b.date.localeCompare(a.date));
+  document.getElementById('history-count').textContent = entries.length + ' Einträge';
+  const body = document.getElementById('history-body');
+  if (!entries.length) {
+    document.getElementById('history-empty').style.display = 'block';
+    body.innerHTML = ''; return;
+  }
+  document.getElementById('history-empty').style.display = 'none';
+  body.innerHTML = entries.map(e => {
+    const col = calcAmpel(e.bb, e.sleep, e.ready, e.hrv, e.rhr);
+    const pillClass = col === 'green' ? 'pill-green' : col === 'amber' ? 'pill-amber' : 'pill-red';
+    const pillText = col === 'green' ? 'Gut' : col === 'amber' ? 'OK' : 'Vors.';
+    const d = new Date(e.date + 'T12:00:00');
+    const fmt = d.toLocaleDateString('de-DE', {weekday:'short',day:'2-digit',month:'2-digit'});
+    return `<tr>
+      <td class="td-date">${fmt}</td>
+      <td>${e.bb || '—'}</td>
+      <td>${e.sleep || '—'}</td>
+      <td>${e.hrv ? e.hrv + ' ms' : '—'}</td>
+      <td>${e.type ? `<span class="pill pill-blue">${e.type}</span>` : '<span class="pill pill-gray">Pause</span>'}</td>
+      <td>${e.dist || '—'}</td>
+      <td>${e.pace || '—'}</td>
+      <td>${e.knee ? kneePill(e.knee) : '—'}</td>
+      <td><span class="pill ${pillClass}">${pillText}</span></td>
+      <td><button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="deleteEntry('${e.date}')">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+function kneePill(v) {
+  const n = parseInt(v);
+  if (n >= 8) return `<span class="pill pill-green">${v}/10</span>`;
+  if (n >= 5) return `<span class="pill pill-amber">${v}/10</span>`;
+  return `<span class="pill pill-red">${v}/10</span>`;
+}
+async function deleteEntry(date) {
+  if (!confirm('Eintrag vom ' + date + ' löschen?')) return;
+  await deleteEntryFromDb(date);
+  renderHistory();
+  showToast('Eintrag gelöscht');
+}
+
+// ── Charts ────────────────────────────────────────────────────────────────
+let chartInstances = {};
+async function renderCharts() {
+  const entries = (await getEntries()).sort((a,b) => a.date.localeCompare(b.date)).slice(-30);
+  if (entries.length < 2) {
+    document.getElementById('charts-empty').style.display = 'block';
+    return;
+  }
+  document.getElementById('charts-empty').style.display = 'none';
+  const labels = entries.map(e => {
+    const d = new Date(e.date + 'T12:00:00');
+    return d.toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit'});
+  });
+  const makeChart = (id, datasets, type='line') => {
+    if (chartInstances[id]) chartInstances[id].destroy();
+    chartInstances[id] = new Chart(document.getElementById(id), {
+      type,
+      data: { labels, datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: datasets.length > 1, labels: { color: '#8b949e', font: { size: 11 }, boxWidth: 10 } } },
+        scales: {
+          x: { ticks: { color: '#484f58', font: { size: 10 }, maxRotation: 45, autoSkip: true, maxTicksLimit: 10 }, grid: { color: 'rgba(255,255,255,0.04)' } },
+          y: { ticks: { color: '#484f58', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } }
+        }
+      }
+    });
+  };
+  makeChart('chart-bb', [
+    { label: 'Body Battery', data: entries.map(e => e.bb || null), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', tension: 0.3, fill: true, pointRadius: 3 },
+    { label: 'HRV (ms)', data: entries.map(e => e.hrv || null), borderColor: '#22c55e', backgroundColor: 'transparent', tension: 0.3, borderDash: [4,3], pointRadius: 3 }
+  ]);
+  makeChart('chart-sleep', [
+    { label: 'Sleep Score', data: entries.map(e => e.sleep || null), borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,0.1)', tension: 0.3, fill: true, pointRadius: 3 }
+  ]);
+  // Weekly km
+  const weeks = {};
+  entries.forEach(e => {
+    if (!e.dist) return;
+    const d = new Date(e.date + 'T12:00:00');
+    const wk = `KW${Math.ceil((d - new Date(d.getFullYear(),0,1)) / 604800000)}`;
+    weeks[wk] = (weeks[wk] || 0) + parseFloat(e.dist);
+  });
+  if (chartInstances['chart-km']) chartInstances['chart-km'].destroy();
+  chartInstances['chart-km'] = new Chart(document.getElementById('chart-km'), {
+    type: 'bar',
+    data: { labels: Object.keys(weeks), datasets: [{ label: 'km', data: Object.values(weeks).map(v => Math.round(v*10)/10), backgroundColor: 'rgba(59,130,246,0.5)', borderColor: '#3b82f6', borderWidth: 1 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#484f58', font:{size:10} }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { ticks: { color: '#484f58', font:{size:10} }, grid: { color: 'rgba(255,255,255,0.04)' } } } }
+  });
+  const weightEntries = entries.filter(e => e.weight);
+  makeChart('chart-weight', [
+    { label: 'Gewicht (kg)', data: entries.map(e => e.weight || null), borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', tension: 0.3, fill: true, pointRadius: 3 }
+  ]);
+}
+
+// ── AI ────────────────────────────────────────────────────────────────────
+async function getAIRecommendation() {
+  const settings = getSettings();
+  if (!settings.apiKey) {
+    showToast('Kein API Key — bitte in Einstellungen eintragen', 'error');
+    showView('settings'); return;
+  }
+  const box = document.getElementById('ai-rec-box');
+  const content = document.getElementById('ai-rec-content');
+  box.style.display = 'block';
+  content.className = 'ai-content loading';
+  content.textContent = 'Claude analysiert deine Daten...';
+
+  const entries = (await getEntries()).sort((a,b) => b.date.localeCompare(a.date)).slice(0,7);
+  const today = {
+    bb: document.getElementById('f-bb').value,
+    sleep: document.getElementById('f-sleep').value,
+    ready: document.getElementById('f-ready').value,
+    rhr: document.getElementById('f-rhr').value,
+    stress: document.getElementById('f-stress').value,
+    hrv: document.getElementById('f-hrv').value,
+    knee: document.getElementById('f-knee').value,
+    shin: document.getElementById('f-shin').value,
+    type: document.getElementById('f-type').value,
+    dist: document.getElementById('f-dist').value,
+    rpe: document.getElementById('f-rpe').value,
+    notes: document.getElementById('f-notes').value
+  };
+  const raceDate = '18. Oktober 2026';
+  const daysLeft = Math.floor((RACE_DATE - new Date()) / 86400000);
+  const prompt = `Du bist Trainingscoach für Björn Schwarz (48J, 183cm, ${entries.find(e=>e.weight)?.weight || '105'}kg).
+Ziel: Frankfurt Marathon ${raceDate} Sub-4h. Noch ${daysLeft} Tage. Zielgewicht 88kg.
+Bekannte Probleme: Schlatter-Knie rechts, Tibiasyndrom links, Insulinresistenz im Abklärung, Psoriasis.
+Baseline: RHF 46bpm, HRV 49ms, VO2max 45.2.
+
+HEUTIGE DATEN:
+Body Battery: ${today.bb}/100
+Sleep Score: ${today.sleep}/100  
+Trainingsbereitschaft: ${today.ready}/100
+Ruhe-HF: ${today.rhr} bpm
+Stress: ${today.stress}/100
+HRV: ${today.hrv || 'nicht gemessen'} ms
+Knie rechts: ${today.knee}/10
+Schienbein links: ${today.shin}/10
+${today.type ? `Heutige Einheit: ${today.type}, ${today.dist}km, RPE ${today.rpe}` : 'Kein Training heute eingetragen'}
+${today.notes ? `Notizen: ${today.notes}` : ''}
+
+LETZTE 7 TAGE:
+${entries.slice(0,7).map(e => `${e.date}: BB${e.bb} Schlaf${e.sleep} ${e.type||'Pause'} ${e.dist||0}km`).join('\n')}
+
+Gib eine kurze, direkte Trainingsempfehlung für MORGEN (3-4 Sätze). Format: Einheit, Dauer, HF-Zone, Begründung. Deutsch, kein Blabla.`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': settings.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 400, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error.message);
+    const text = data.content?.[0]?.text || 'Keine Antwort erhalten.';
+    content.className = 'ai-content';
+    content.textContent = text;
+    // Save to today's entry
+    const entries2 = getEntries();
+    const todayDate = document.getElementById('f-date').value || new Date().toISOString().slice(0,10);
+    const idx = entries2.findIndex(e => e.date === todayDate);
+    if (idx >= 0) { entries2[idx].aiRec = text; saveEntries(entries2); }
+  } catch(err) {
+    content.className = 'ai-content';
+    content.textContent = 'Fehler: ' + err.message + '\n\nAPI Key in Einstellungen überprüfen.';
+  }
+}
+
+// ── Settings ───────────────────────────────────────────────────────────────
+function loadSettings() {
+  const s = getSettings();
+  if (s.apiKey) document.getElementById('s-apikey').value = s.apiKey;
+}
+function saveSettings() {
+  const key = document.getElementById('s-apikey').value.trim();
+  saveSettingsData({ ...getSettings(), apiKey: key });
+  showToast('Einstellungen gespeichert ✓', 'success');
+}
+async function testAPI() {
+  const settings = getSettings();
+  const key = document.getElementById('s-apikey').value.trim() || settings.apiKey;
+  if (!key) { showToast('Kein API Key eingegeben', 'error'); return; }
+  const status = document.getElementById('api-status');
+  status.style.display = 'block';
+  status.style.color = 'var(--text2)';
+  status.textContent = 'Teste Verbindung...';
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 30, messages: [{ role: 'user', content: 'Antworte mit: Verbindung OK' }] })
+    });
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error.message);
+    status.style.color = 'var(--green)';
+    status.textContent = '✓ ' + (data.content?.[0]?.text || 'Verbindung erfolgreich');
+  } catch(e) {
+    status.style.color = 'var(--red)';
+    status.textContent = '✗ Fehler: ' + e.message;
+  }
+}
+function exportData() {
+  const data = { entries: getEntries(), settings: { ...getSettings(), apiKey: undefined }, exported: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'marathon_coach_export_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+}
+function clearData() {
+  if (!confirm('Wirklich ALLE Einträge löschen? Das kann nicht rückgängig gemacht werden.')) return;
+  localStorage.removeItem('mc_entries');
+  showToast('Daten gelöscht');
+  renderHistory();
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+
+function toggleStrengthBlock(val) {
+  const isStrength = val.toLowerCase().includes('kraft');
+  document.getElementById('strength-block').style.display = isStrength ? 'block' : 'none';
+}
+// ── Push-ups ───────────────────────────────────────────────────────────────
+const GOGGINS_QUOTES = [
+  '„Die meisten Menschen laufen ihrem Potenzial ein Leben lang davon."',
+  '„Du bist weicher als du denkst. Und stärker als du glaubst."',
+  '„Wenn dein Geist aufhören will — hör nicht hin."',
+  '„Kein Mitleid. Keine Ausreden. Kein Ende."',
+  '„Wer zählt Liegestütze, der macht zu wenige."',
+  '„Der Schmerz verschwindet. Die Stolz bleibt."',
+  '„Bequemlichkeit ist der Feind der Größe."',
+  '„Wenn es sich leicht anfühlt, machst du was falsch."',
+];
+
+let puTodayTemp = 0;
+
+function adjustPushups(n) {
+  puTodayTemp = Math.max(0, puTodayTemp + n);
+  document.getElementById('pu-today-count').textContent = puTodayTemp;
+}
+function setPushupPreset(n) {
+  puTodayTemp = puTodayTemp + n;
+  document.getElementById('pu-today-count').textContent = puTodayTemp;
+}
+function resetTodayPushups() {
+  puTodayTemp = 0;
+  document.getElementById('pu-today-count').textContent = 0;
+}
+async function savePushups() {
+  const today = new Date().toISOString().slice(0,10);
+  const data = await getPushupData();
+  const newReps = (data[today] || 0) + puTodayTemp;
+  showToast('Speichern...', '');
+  await savePushupDay(today, newReps);
+  puTodayTemp = 0;
+  document.getElementById('pu-today-count').textContent = 0;
+  await renderPushups();
+  showToast('Push-ups gespeichert 💪', 'success');
+}
+async function calcPushupStreak() {
+  const data = await getPushupData();
+  let streak = 0;
+  const today = new Date();
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0,10);
+    if (data[key] > 0) streak++;
+    else if (i > 0) break;
+  }
+  return streak;
+}
+async function renderPushups() {
+  const data = await getPushupData();
+  const today = new Date().toISOString().slice(0,10);
+  puTodayTemp = 0;
+  document.getElementById('pu-today-count').textContent = data[today] || 0;
+
+  const vals = Object.values(data).map(Number).filter(v => v > 0);
+  const total = vals.reduce((a,b) => a+b, 0);
+  const best = vals.length ? Math.max(...vals) : 0;
+  const streak = await calcPushupStreak();
+  document.getElementById('pu-streak').textContent = streak;
+  document.getElementById('pu-total').textContent = total;
+  document.getElementById('pu-avg').textContent = vals.length ? Math.round(total / vals.length) : 0;
+  document.getElementById('pu-best').textContent = best;
+  document.getElementById('pu-days').textContent = vals.length;
+  document.getElementById('pu-goggins-quote').textContent = GOGGINS_QUOTES[Math.floor(Math.random() * GOGGINS_QUOTES.length)];
+
+  const hist = document.getElementById('pu-history');
+  let html = '';
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0,10);
+    const reps = data[key] || 0;
+    const fmt = d.toLocaleDateString('de-DE', {weekday:'short', day:'2-digit', month:'2-digit'});
+    html += `<div class="pushup-history-row">
+      <span style="color:var(--text)">${fmt}${i===0?' <span style="color:var(--accent);font-size:11px">HEUTE</span>':''}</span>
+      <span class="${reps>0?'pushup-day-done':'pushup-day-zero'}">${reps>0?reps+' Reps 💪':'—'}</span>
+    </div>`;
+  }
+  hist.innerHTML = html;
+}
+
+// ── Ernährung ──────────────────────────────────────────────────────────────
+async function renderErnaehrung() {
+  const today = new Date().toISOString().slice(0,10);
+  const dateEl = document.getElementById('ern-date');
+  if (dateEl && !dateEl.value) dateEl.value = today;
+  const timeEl = document.getElementById('ern-time');
+  if (timeEl && !timeEl.value) timeEl.value = new Date().toTimeString().slice(0,5);
+  await renderMealsForDate(dateEl ? dateEl.value : today);
+}
+
+async function renderMealsForDate(date) {
+  const all = await getMeals();
+  const meals = all[date] || [];
+  const list = document.getElementById('ern-meals-list');
+  if (!meals.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🍽️</div><div class="empty-text">Noch nichts eingetragen.<br>Oben eingeben und analysieren lassen!</div></div>`;
+    updateTotals([]); return;
+  }
+  list.innerHTML = meals.map((m, i) => `
+    <div class="meal-entry">
+      <div class="meal-entry-header">
+        <span class="meal-time">${m.time} — ${m.mealType}</span>
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <span class="meal-kcal">${m.kcal} kcal</span>
+          <button class="btn btn-danger" style="padding:2px 8px;font-size:11px" onclick="deleteMeal('${date}',${i})">✕</button>
+        </div>
+      </div>
+      <div class="meal-text">${m.food}</div>
+      <div class="macro-pills">
+        <span class="macro-pill macro-p">Protein: ${m.protein}g</span>
+        <span class="macro-pill macro-c">Carbs: ${m.carbs}g</span>
+        <span class="macro-pill macro-f">Fett: ${m.fat}g</span>
+      </div>
+    </div>`).join('');
+  updateTotals(meals);
+}
+
+function updateTotals(meals) {
+  const kcal = meals.reduce((a,m) => a+(m.kcal||0), 0);
+  const p = meals.reduce((a,m) => a+(m.protein||0), 0);
+  const c = meals.reduce((a,m) => a+(m.carbs||0), 0);
+  const f = meals.reduce((a,m) => a+(m.fat||0), 0);
+  document.getElementById('ern-total-kcal').textContent = kcal;
+  document.getElementById('ern-total-p').textContent = p+'g';
+  document.getElementById('ern-total-c').textContent = c+'g';
+  document.getElementById('ern-total-f').textContent = f+'g';
+  document.getElementById('ern-kcal-bar').style.width = Math.min(100, Math.round(kcal/22))+'%';
+}
+
+async function deleteMeal(date, idx) {
+  const all = await getMeals();
+  if (all[date]) { all[date].splice(idx,1); await saveMealsForDate(date, all[date]); }
+  await renderMealsForDate(date);
+}
+
+async function clearDayMeals() {
+  const date = document.getElementById('ern-date').value;
+  if (!confirm('Alle Mahlzeiten für '+date+' löschen?')) return;
+  await saveMealsForDate(date, []);
+  await renderMealsForDate(date);
+}
+
+async function addManualMeal() {
+  const food = document.getElementById('ern-input').value.trim();
+  if (!food) { showToast('Bitte erst etwas eingeben','error'); return; }
+  const meal = { food, kcal:0, protein:0, carbs:0, fat:0, time: document.getElementById('ern-time').value, mealType: document.getElementById('ern-meal-type').value, ts: Date.now() };
+  await saveMealEntry(meal);
+  document.getElementById('ern-input').value = '';
+  showToast('Mahlzeit gespeichert','success');
+}
+
+async function saveMealEntry(meal) {
+  const date = document.getElementById('ern-date').value || new Date().toISOString().slice(0,10);
+  const all = await getMeals();
+  if (!all[date]) all[date] = [];
+  all[date].push(meal);
+  await saveMealsForDate(date, all[date]);
+  await renderMealsForDate(date);
+}
+
+async function confirmFoodEntry(kcal, protein, carbs, fat) {
+  const food = document.getElementById('ern-input').value.trim();
+  const meal = { food, kcal, protein, carbs, fat, time: document.getElementById('ern-time').value, mealType: document.getElementById('ern-meal-type').value, ts: Date.now() };
+  await saveMealEntry(meal);
+  document.getElementById('ern-input').value = '';
+  document.getElementById('ern-ai-box').style.display = 'none';
+  showToast('Mahlzeit gespeichert ✓','success');
+}
+
+async function analyzeFood() {
+  const food = document.getElementById('ern-input').value.trim();
+  if (!food) { showToast('Bitte erst etwas eingeben','error'); return; }
+  const settings = getSettings();
+  if (!settings.apiKey) { showToast('Kein API Key — bitte in Einstellungen','error'); showView('settings'); return; }
+  const box = document.getElementById('ern-ai-box');
+  const content = document.getElementById('ern-ai-content');
+  box.style.display = 'block';
+  content.className = 'ai-content loading';
+  content.textContent = 'Claude analysiert die Kalorien...';
+  const prompt = `Analysiere folgende Mahlzeit und schätze die Nährwerte möglichst genau.\nMahlzeit: "${food}"\n\nAntworte NUR mit einem JSON-Objekt (kein Markdown, keine Erklärung):\n{"kcal": 850, "protein": 35, "carbs": 90, "fat": 28, "notes": "kurze Erklärung"}\n\nSei realistisch bei Portionsgrößen.`;
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': settings.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 300, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error.message);
+    const text = data.content?.[0]?.text || '{}';
+    let parsed;
+    try { parsed = JSON.parse(text.replace(/```json?|```/g,'')); } catch { throw new Error('Parse-Fehler'); }
+    content.className = 'ai-content';
+    content.innerHTML = `<strong>${parsed.kcal} kcal</strong> · Protein: ${parsed.protein}g · Carbs: ${parsed.carbs}g · Fett: ${parsed.fat}g<br><span style="color:var(--text3);font-size:12px">${parsed.notes||''}</span><div style="margin-top:0.75rem"><button class="btn btn-primary" onclick="confirmFoodEntry(${parsed.kcal},${parsed.protein},${parsed.carbs},${parsed.fat})">✓ Mahlzeit speichern</button></div>`;
+  } catch(err) {
+    content.className = 'ai-content';
+    content.textContent = 'Fehler: ' + err.message;
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
+updateCountdown();
+setInterval(updateCountdown, 60000);
+// Hide app until auth check completes
+document.querySelector('.app').style.display = 'none';
+initAuth();
+</script>
+</body>
+</html>
