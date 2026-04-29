@@ -937,7 +937,7 @@ function saveSettingsData(s) { localStorage.setItem('mc_settings', JSON.stringif
 
 
 // ── Navigation ────────────────────────────────────────────────────────────
-function showView(id) {
+async function showView(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('view-' + id).classList.add('active');
@@ -953,12 +953,12 @@ function showView(id) {
       (id === 'settings' && txt.includes('einstell'))
     ) n.classList.add('active');
   });
-  if (id === 'dashboard') renderDashboard();
-  if (id === 'history') renderHistory();
-  if (id === 'charts') renderCharts();
+  if (id === 'dashboard') await renderDashboard();
+  if (id === 'history') await renderHistory();
+  if (id === 'charts') await renderCharts();
   if (id === 'settings') loadSettings();
-  if (id === 'pushups') renderPushups();
-  if (id === 'ernaehrung') renderErnaehrung();
+  if (id === 'pushups') await renderPushups();
+  if (id === 'ernaehrung') await renderErnaehrung();
 }
 
 // ── Countdown ─────────────────────────────────────────────────────────────
