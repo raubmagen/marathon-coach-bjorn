@@ -1060,6 +1060,15 @@ async function renderDashboard() {
       else bpEl.textContent = '—';
     }
   }
+  // Push-up streak on dashboard
+  const puStreak = await calcPushupStreak();
+  const puData = await getPushupData();
+  const puToday = puData[new Date().toISOString().slice(0,10)] || 0;
+  const streakEl = document.getElementById('d-pushup-streak');
+  if (streakEl) {
+    streakEl.innerHTML = puStreak + '<span class="metric-unit">🔥</span>';
+    document.getElementById('d-pushup-today').textContent = 'Heute: ' + puToday + ' Reps';
+  }
   // Big pushup counter
   const bigPu = document.getElementById('d-pushup-big');
   if (bigPu) bigPu.textContent = puToday;
@@ -1072,16 +1081,6 @@ async function renderDashboard() {
   }
   document.getElementById('d-run').innerHTML = (entry.dist || '—') + '<span class="metric-unit">km</span>';
   document.getElementById('d-run-t').textContent = entry.pace ? entry.pace + ' min/km' : '';
-
-  // Push-up streak on dashboard
-  const puStreak = await calcPushupStreak();
-  const puData = await getPushupData();
-  const puToday = puData[new Date().toISOString().slice(0,10)] || 0;
-  const streakEl = document.getElementById('d-pushup-streak');
-  if (streakEl) {
-    streakEl.innerHTML = puStreak + '<span class="metric-unit">🔥</span>';
-    document.getElementById('d-pushup-today').textContent = 'Heute: ' + puToday + ' Reps';
-  }
 
   if (entry.aiRec) {
     document.getElementById('ai-daily-box').style.display = 'block';
