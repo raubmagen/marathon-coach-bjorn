@@ -351,11 +351,24 @@ tr:hover td { background: var(--bg3); }
           <div class="metric-val" id="d-run">—<span class="metric-unit">km</span></div>
           <div class="metric-trend" id="d-run-t"></div>
         </div>
+        <div class="metric">
+          <div class="metric-label">Blutdruck 🫀</div>
+          <div class="metric-val" id="d-bp" style="font-size:20px">—</div>
+          <div class="metric-trend">Ziel: &lt;130/80</div>
+        </div>
         <div class="metric blue">
           <div class="metric-label">Push-up Streak</div>
           <div class="metric-val" id="d-pushup-streak">—<span class="metric-unit">🔥</span></div>
           <div class="metric-trend" id="d-pushup-today">Heute: — Reps</div>
         </div>
+      </div>
+
+      <!-- Big Push-up Counter -->
+      <div class="card" style="text-align:center;padding:1.5rem;margin-bottom:1.25rem">
+        <div style="font-size:12px;font-weight:700;letter-spacing:0.1em;color:var(--text3);margin-bottom:0.5rem">PUSH-UPS HEUTE</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:80px;font-weight:700;color:var(--accent);line-height:1" id="d-pushup-big">0</div>
+        <div style="font-size:13px;color:var(--text3);margin-top:0.25rem">Ziel: täglich! 💪</div>
+        <button class="btn btn-secondary" onclick="showView('pushups')" style="margin-top:0.75rem;font-size:12px">+ Reps eintragen</button>
       </div>
 
       <div id="ai-daily-box" class="ai-box" style="display:none">
@@ -501,6 +514,15 @@ tr:hover td { background: var(--bg3); }
           <div class="form-group">
             <label>Gewicht <span>(kg, optional)</span></label>
             <input type="number" id="f-weight" placeholder="105" step="0.1" min="50" max="200">
+          </div>
+          <div class="form-group">
+            <label>Blutdruck <span>(systolisch/diastolisch)</span></label>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              <input type="number" id="f-bp-sys" placeholder="120" min="80" max="200" style="width:80px">
+              <span style="color:var(--text3)">/</span>
+              <input type="number" id="f-bp-dia" placeholder="80" min="40" max="130" style="width:80px">
+              <span style="color:var(--text3);font-size:13px">mmHg</span>
+            </div>
           </div>
           <div class="form-group">
             <label>Wasser <span>(Liter, Ziel: 3L)</span></label>
@@ -744,6 +766,7 @@ tr:hover td { background: var(--bg3); }
           <div class="card-title" style="margin-bottom:0">Heute gegessen</div>
           <div style="display:flex;gap:0.5rem;align-items:center">
             <input type="date" id="ern-date" style="font-size:12px;padding:4px 8px">
+            <button class="btn btn-secondary" style="padding:4px 10px;font-size:12px" onclick="exportNutrition()">📥 Export</button>
             <button class="btn btn-danger" style="padding:4px 10px;font-size:12px" onclick="clearDayMeals()">Tag löschen</button>
           </div>
         </div>
@@ -1021,6 +1044,25 @@ async function renderDashboard() {
   document.getElementById('d-rhr').innerHTML = (entry.rhr || '—') + '<span class="metric-unit">bpm</span>';
   document.getElementById('d-stress').innerHTML = (entry.stress || '—');
   document.getElementById('d-weight').innerHTML = (entry.weight || '—') + '<span class="metric-unit">kg</span>';
+  // Blood pressure
+  const bpEl = document.getElementById('d-bp');
+  if (bpEl) {
+    if (entry.bpSys && entry.bpDia) {
+      const sys = parseInt(entry.bpSys), dia = parseInt(entry.bpDia);
+      const bpOk = sys < 130 && dia < 80;
+      const bpWarn = sys < 140 && dia < 90;
+      bpEl.innerHTML = `<span style="color:${bpOk ? 'var(--green)' : bpWarn ? 'var(--amber)' : 'var(--red)'}">${sys}/${dia}</span><span class="metric-unit">mmHg</span>`;
+    } else {
+      // Show last known BP from history
+      const allEntries = await getEntries();
+      const lastBP = allEntries.sort((a,b) => b.date.localeCompare(a.date)).find(e => e.bpSys && e.bpDia);
+      if (lastBP) bpEl.innerHTML = `${lastBP.bpSys}/${lastBP.bpDia}<span class="metric-unit">mmHg</span>`;
+      else bpEl.textContent = '—';
+    }
+  }
+  // Big pushup counter
+  const bigPu = document.getElementById('d-pushup-big');
+  if (bigPu) bigPu.textContent = puToday;
   // Water
   const waterEl = document.getElementById('d-water');
   if (waterEl) {
@@ -1063,6 +1105,8 @@ async function saveEntry() {
     pace: document.getElementById('f-pace').value,
     rpe: document.getElementById('f-rpe').value,
     weight: document.getElementById('f-weight').value,
+    bpSys: document.getElementById('f-bp-sys').value,
+    bpDia: document.getElementById('f-bp-dia').value,
     water: document.getElementById('f-water').value,
     knee: document.getElementById('f-knee').value,
     shin: document.getElementById('f-shin').value,
@@ -1142,6 +1186,8 @@ async function editEntry(date) {
   setInput('f-dur', e.dur);
   setInput('f-pace', e.pace);
   setInput('f-weight', e.weight);
+  setInput('f-bp-sys', e.bpSys);
+  setInput('f-bp-dia', e.bpDia);
   setInput('f-notes', e.notes);
   // Water
   if (e.water) {
@@ -1442,6 +1488,43 @@ async function renderPushups() {
 }
 
 // ── Ernährung ──────────────────────────────────────────────────────────────
+async function exportNutrition() {
+  const all = await getMeals();
+  const dates = Object.keys(all).sort();
+  if (!dates.length) { showToast('Keine Daten zum exportieren', 'error'); return; }
+
+  // Build CSV
+  let csv = 'Datum;Uhrzeit;Mahlzeit;Beschreibung;kcal;Protein (g);Carbs (g);Fett (g)\n';
+  dates.forEach(date => {
+    const meals = all[date] || [];
+    meals.forEach(m => {
+      csv += `${date};${m.time||''};${m.mealType||''};${(m.food||'').replace(/;/g,',')};${m.kcal||0};${m.protein||0};${m.carbs||0};${m.fat||0}\n`;
+    });
+  });
+
+  // Daily totals
+  csv += '\nTAGES-ZUSAMMENFASSUNG\n';
+  csv += 'Datum;Gesamt kcal;Protein (g);Carbs (g);Fett (g);Mahlzeiten\n';
+  dates.forEach(date => {
+    const meals = all[date] || [];
+    const kcal = meals.reduce((a,m) => a+(m.kcal||0), 0);
+    const p = meals.reduce((a,m) => a+(m.protein||0), 0);
+    const c = meals.reduce((a,m) => a+(m.carbs||0), 0);
+    const f = meals.reduce((a,m) => a+(m.fat||0), 0);
+    csv += `${date};${kcal};${p};${c};${f};${meals.length}\n`;
+  });
+
+  // Download
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Ernaehrungsprotokoll_Bjorn_${dates[0]}_bis_${dates[dates.length-1]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Export erfolgreich ✓', 'success');
+}
+
 async function renderErnaehrung() {
   const today = new Date().toISOString().slice(0,10);
   const dateEl = document.getElementById('ern-date');
