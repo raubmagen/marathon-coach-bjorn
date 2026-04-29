@@ -1033,7 +1033,8 @@ async function renderDashboard() {
 
   // Push-up streak on dashboard
   const puStreak = await calcPushupStreak();
-  const puToday = getPushupData()[new Date().toISOString().slice(0,10)] || 0;
+  const puData = await getPushupData();
+  const puToday = puData[new Date().toISOString().slice(0,10)] || 0;
   const streakEl = document.getElementById('d-pushup-streak');
   if (streakEl) {
     streakEl.innerHTML = puStreak + '<span class="metric-unit">🔥</span>';
