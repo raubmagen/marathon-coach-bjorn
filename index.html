@@ -607,11 +607,10 @@ tr:hover td { background: var(--bg3); }
           <div class="empty-icon">≡</div>
           <div class="empty-text">Noch keine Einträge. Starte mit dem ersten Tageseintrag.</div>
         </div>
-      </div>
       <div style="margin-top:1rem;display:flex;justify-content:flex-end">
         <button class="btn btn-secondary" style="padding:6px 14px;font-size:12px" onclick="exportHistory()">📥 CSV exportieren</button>
       </div>
-    </div>
+      </div>
     </div>
 
     <!-- ══ CHARTS ══ -->
@@ -1713,7 +1712,7 @@ async function exportHistory() {
   a.download = 'Trainingsverlauf_Bjorn_' + entries[0].date + '_bis_' + entries[entries.length-1].date + '.csv';
   a.click();
   URL.revokeObjectURL(a.href);
-  showToast('Export: ' + entries.length + ' Einträge ✓', 'success');
+  showToast('Export: ' + entries.length + ' Eintraege ✓', 'success');
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────
