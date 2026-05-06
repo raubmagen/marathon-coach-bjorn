@@ -346,11 +346,6 @@ tr:hover td { background: var(--bg3); }
           <div class="metric-val" id="d-water">—<span class="metric-unit">L</span></div>
           <div class="metric-trend">Ziel: 3L</div>
         </div>
-        <div class="metric" id="d-kcal-card">
-          <div class="metric-label">Kcal verbleibend 🔥</div>
-          <div class="metric-val" id="d-kcal-remaining" style="font-size:22px">—</div>
-          <div class="metric-trend" id="d-kcal-trend">Heute eintragen</div>
-        </div>
         <div class="metric">
           <div class="metric-label">Letzter Lauf</div>
           <div class="metric-val" id="d-run">—<span class="metric-unit">km</span></div>
@@ -537,14 +532,6 @@ tr:hover td { background: var(--bg3); }
             </div>
           </div>
           <div class="form-group">
-            <label>Ziel-Kcal <span>(Standard: 2200)</span></label>
-            <input type="number" id="f-kcal-goal" placeholder="2200" min="1200" max="4000" step="50">
-          </div>
-          <div class="form-group">
-            <label>Gegessen <span>(kcal heute)</span></label>
-            <input type="number" id="f-kcal-eaten" placeholder="0" min="0" max="6000" step="10">
-          </div>
-          <div class="form-group">
             <label>Knie rechts <span>(1=Schmerz, 10=OK)</span></label>
             <div class="range-row">
               <input type="range" min="1" max="10" value="8" id="f-knee" oninput="document.getElementById('f-knee-v').textContent=this.value">
@@ -608,6 +595,10 @@ tr:hover td { background: var(--bg3); }
           <div class="empty-text">Noch keine Einträge. Starte mit dem ersten Tageseintrag.</div>
         </div>
       </div>
+      <div style="margin-top:1rem;display:flex;justify-content:flex-end">
+        <button class="btn btn-secondary" style="padding:6px 14px;font-size:12px" onclick="exportHistory()">📥 CSV exportieren</button>
+      </div>
+    </div>
     </div>
 
     <!-- ══ CHARTS ══ -->
@@ -1093,36 +1084,6 @@ async function renderDashboard() {
     waterEl.closest('.metric').className = 'metric ' + (w >= 3 ? 'green' : w >= 2 ? 'amber' : 'red');
   }
   document.getElementById('d-run').innerHTML = (entry.dist || '—') + '<span class="metric-unit">km</span>';
-
-  // ── Kcal verbleibend mit Sport-Bonus ──
-  const kcalEl = document.getElementById('d-kcal-remaining');
-  const kcalTrend = document.getElementById('d-kcal-trend');
-  const kcalCard = document.getElementById('d-kcal-card');
-  if (kcalEl) {
-    const goal = parseInt(entry.kcalGoal) || 2200;
-    const eaten = parseInt(entry.kcalEaten) || 0;
-    // Sport-Bonus: Long Run/hohe Distanz +400, Intervall/Tempo +300, sonstiges Training +200
-    let sportBonus = 0;
-    const trainType = (entry.type || '').toLowerCase();
-    const dist = parseFloat(entry.dist) || 0;
-    if (trainType.includes('long') || dist >= 20) sportBonus = 400;
-    else if (trainType.includes('intervall') || trainType.includes('tempo')) sportBonus = 300;
-    else if (trainType && trainType !== '') sportBonus = 200;
-    const effective = goal + sportBonus;
-    const remaining = effective - eaten;
-    const pct = eaten > 0 ? Math.round((eaten / effective) * 100) : 0;
-    if (eaten === 0) {
-      kcalEl.innerHTML = '—';
-      if (kcalTrend) kcalTrend.textContent = 'Ziel: ' + goal.toLocaleString('de-DE') + ' kcal';
-      if (kcalCard) kcalCard.className = 'metric';
-    } else {
-      kcalEl.innerHTML = Math.max(0, remaining).toLocaleString('de-DE') + '<span class="metric-unit" style="font-size:11px"> kcal</span>';
-      let trend = pct + '% · Ziel ' + goal.toLocaleString('de-DE');
-      if (sportBonus > 0) trend += ' +' + sportBonus + ' Sport 🏃';
-      if (kcalTrend) kcalTrend.textContent = trend;
-      if (kcalCard) kcalCard.className = 'metric ' + (remaining < 0 ? 'red' : remaining < 300 ? 'amber' : 'green');
-    }
-  }
   document.getElementById('d-run-t').textContent = entry.pace ? entry.pace + ' min/km' : '';
 
   if (entry.aiRec) {
@@ -1150,8 +1111,6 @@ async function saveEntry() {
     bpSys: document.getElementById('f-bp-sys').value,
     bpDia: document.getElementById('f-bp-dia').value,
     water: document.getElementById('f-water').value,
-    kcalGoal: document.getElementById('f-kcal-goal').value,
-    kcalEaten: document.getElementById('f-kcal-eaten').value,
     knee: document.getElementById('f-knee').value,
     shin: document.getElementById('f-shin').value,
     notes: document.getElementById('f-notes').value,
@@ -1231,8 +1190,6 @@ async function editEntry(date) {
   setInput('f-pace', e.pace);
   setInput('f-weight', e.weight);
   setInput('f-bp-sys', e.bpSys);
-  setInput('f-kcal-goal', e.kcalGoal);
-  setInput('f-kcal-eaten', e.kcalEaten);
   setInput('f-bp-dia', e.bpDia);
   setInput('f-notes', e.notes);
   // Water
@@ -1687,6 +1644,51 @@ async function analyzeFood() {
     content.className = 'ai-content';
     content.textContent = 'Fehler: ' + err.message;
   }
+}
+
+// ── Export History ───────────────────────────────────────────────────────
+async function exportHistory() {
+  const entries = (await getEntries()).sort((a,b) => a.date.localeCompare(b.date));
+  if (!entries.length) { showToast('Keine Einträge zum exportieren', 'error'); return; }
+
+  const cols = [
+    'Datum','Wochentag','Body Battery','Sleep Score','Bereitschaft','Ruhe-HF',
+    'Stress','HRV','Einheit','Distanz (km)','Dauer (min)','Pace (min/km)','RPE',
+    'Gewicht (kg)','Blutdruck sys','Blutdruck dia','Wasser (L)',
+    'Kcal Ziel','Kcal gegessen','Knie (1-10)','Schienbein (1-10)','Notizen','Ampel'
+  ];
+
+  const weekdays = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+  const rows = entries.map(e => {
+    const d = new Date(e.date + 'T12:00:00');
+    const ampel = (() => {
+      const bb = parseFloat(e.bb)||0, sl = parseFloat(e.sleep)||0, rd = parseFloat(e.ready)||0;
+      const hrv = parseFloat(e.hrv)||49, rhr = parseFloat(e.rhr)||46;
+      if (bb>50 && sl>75 && rd>60 && rhr<=51 && hrv>=44) return 'GUT';
+      if (bb>30 && sl>65 && rhr<=51) return 'OK';
+      return 'VORSICHT';
+    })();
+    return [
+      e.date, weekdays[d.getDay()],
+      e.bb||'', e.sleep||'', e.ready||'', e.rhr||'',
+      e.stress||'', e.hrv||'',
+      e.type||'', e.dist||'', e.dur||'', e.pace||'', e.rpe||'',
+      e.weight||'', e.bpSys||'', e.bpDia||'', e.water||'',
+      e.kcalGoal||'', e.kcalEaten||'',
+      e.knee||'', e.shin||'',
+      (e.notes||'').replace(/;/g,',').replace(/[\r\n]+/g,' '),
+      ampel
+    ].map(v => String(v).includes(';') ? '"'+v+'"' : v);
+  });
+
+  const csv = [cols.join(';'), ...rows.map(r => r.join(';'))].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Trainingsverlauf_Bjorn_' + entries[0].date + '_bis_' + entries[entries.length-1].date + '.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('Export erfolgreich ✓ — ' + entries.length + ' Einträge', 'success');
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────
