@@ -661,7 +661,10 @@ tr:hover td { background: var(--bg3); }
 
     <!-- ══ VERLAUF ══ -->
     <div id="view-history" class="view">
-      <div class="page-title">Trainingsverlauf</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.25rem">
+        <div class="page-title" style="margin-bottom:0">Trainingsverlauf</div>
+        <button class="btn btn-secondary" onclick="exportTraining()" style="padding:6px 14px;font-size:13px">📥 Export CSV</button>
+      </div>
       <div class="page-sub" id="history-count">Alle Einträge</div>
       <div class="card">
         <div class="table-wrap">
@@ -1708,6 +1711,34 @@ async function renderPushups() {
 }
 
 // ── Ernährung ──────────────────────────────────────────────────────────────
+async function exportTraining() {
+  const entries = (await getEntries()).sort((a,b) => a.date.localeCompare(b.date));
+  if (!entries.length) { showToast('Keine Einträge zum exportieren', 'error'); return; }
+
+  let csv = 'Datum;Body Battery;Schlaf;Bereitschaft;HRV;Ruhe-HF;Stress;Einheit 1;Distanz 1;Dauer 1;Pace 1;RPE 1;Einheit 2;Distanz 2;Dauer 2;Pace 2;RPE 2;Gewicht;Blutdruck;Wasser;Gegessen kcal;Ziel kcal;Knie;Schienbein;Notizen\n';
+  entries.forEach(e => {
+    const bp = (e.bpSys && e.bpDia) ? `${e.bpSys}/${e.bpDia}` : '';
+    csv += [
+      e.date, e.bb, e.sleep, e.ready, e.hrv, e.rhr, e.stress,
+      e.type||'', e.dist||'', e.dur||'', e.pace||'', e.rpe||'',
+      e.type2||'', e.dist2||'', e.dur2||'', e.pace2||'', e.rpe2||'',
+      e.weight||'', bp, e.water||'',
+      e.eaten||'', e.kcalGoal||'',
+      e.knee||'', e.shin||'',
+      (e.notes||'').replace(/;/g,',').replace(/\n/g,' ')
+    ].join(';') + '\n';
+  });
+
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Trainingsverlauf_Bjorn_${entries[0].date}_bis_${entries[entries.length-1].date}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`${entries.length} Einträge exportiert ✓`, 'success');
+}
+
 async function exportNutrition() {
   const all = await getMeals();
   const dates = Object.keys(all).sort();
