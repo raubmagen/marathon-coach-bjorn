@@ -1153,8 +1153,12 @@ async function renderDashboard() {
     waterEl.innerHTML = w + '<span class="metric-unit">L</span>';
     waterEl.closest('.metric').className = 'metric ' + (w >= 3 ? 'green' : w >= 2 ? 'amber' : 'red');
   }
-  document.getElementById('d-run').innerHTML = (entry.dist || '—') + '<span class="metric-unit">km</span>';
-  document.getElementById('d-run-t').textContent = entry.pace ? entry.pace + ' min/km' : '';
+  // Letzter Lauf — erste Lauf-Einheit nehmen (Einheit 1 oder 2)
+  const runDist = entry.dist || entry.dist2 || '—';
+  const runPace = entry.pace || entry.pace2 || '';
+  const runType = entry.dist ? entry.type : (entry.dist2 ? entry.type2 : '');
+  document.getElementById('d-run').innerHTML = runDist + '<span class="metric-unit">km</span>';
+  document.getElementById('d-run-t').textContent = runPace ? runPace + ' min/km' : (runType || '');
 
   if (entry.aiRec) {
     document.getElementById('ai-daily-box').style.display = 'block';
