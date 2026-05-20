@@ -361,6 +361,11 @@ tr:hover td { background: var(--bg3); }
           <div class="metric-val" id="d-pushup-streak">—<span class="metric-unit">🔥</span></div>
           <div class="metric-trend" id="d-pushup-today">Heute: — Reps</div>
         </div>
+        <div class="metric" id="d-kcal-tile">
+          <div class="metric-label">Kcal verbleibend 🍽️</div>
+          <div class="metric-val" id="d-kcal-left" style="font-size:20px">—</div>
+          <div class="metric-trend" id="d-kcal-trend">Ziel: 2.200 kcal</div>
+        </div>
       </div>
 
       <!-- Big Push-up Counter -->
@@ -596,6 +601,20 @@ tr:hover td { background: var(--bg3); }
               <span style="color:var(--text3)">/</span>
               <input type="number" id="f-bp-dia" placeholder="80" min="40" max="130" style="width:80px">
               <span style="color:var(--text3);font-size:13px">mmHg</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Gegessen <span>(kcal heute)</span></label>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              <input type="number" id="f-eaten" placeholder="1800" min="0" max="6000" style="flex:1" oninput="updateKcalPreview()">
+              <button class="btn btn-secondary" onclick="loadKcalFromErnaehrung()" style="padding:6px 10px;font-size:12px;white-space:nowrap">📥 Aus Ernährung</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Ziel-Kcal <span>(Basis 2200 + Sport)</span></label>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              <input type="number" id="f-kcal-goal" placeholder="2200" min="1500" max="5000" style="flex:1" oninput="updateKcalPreview()">
+              <button class="btn btn-secondary" onclick="calcKcalGoal()" style="padding:6px 10px;font-size:12px;white-space:nowrap">🔢 Berechnen</button>
             </div>
           </div>
           <div class="form-group">
@@ -1153,7 +1172,24 @@ async function renderDashboard() {
     waterEl.innerHTML = w + '<span class="metric-unit">L</span>';
     waterEl.closest('.metric').className = 'metric ' + (w >= 3 ? 'green' : w >= 2 ? 'amber' : 'red');
   }
-  // Letzter Lauf — erste Lauf-Einheit nehmen (Einheit 1 oder 2)
+  // Kcal verbleibend
+  const kcalEl = document.getElementById('d-kcal-left');
+  if (kcalEl) {
+    const goal = parseInt(entry.kcalGoal) || 2200;
+    const eaten = parseInt(entry.eaten) || 0;
+    const left = goal - eaten;
+    const pct = eaten > 0 ? Math.round((eaten / goal) * 100) : 0;
+    kcalEl.innerHTML = eaten > 0
+      ? `${left > 0 ? left : 0}<span class="metric-unit">kcal</span>`
+      : '—';
+    document.getElementById('d-kcal-trend').textContent = eaten > 0
+      ? `${eaten} von ${goal} kcal (${pct}%)`
+      : `Ziel: ${goal} kcal`;
+    const tile = document.getElementById('d-kcal-tile');
+    if (tile && eaten > 0) {
+      tile.className = 'metric ' + (left > 300 ? '' : left > 0 ? 'amber' : 'red');
+    }
+  }
   const runDist = entry.dist || entry.dist2 || '—';
   const runPace = entry.pace || entry.pace2 || '';
   const runType = entry.dist ? entry.type : (entry.dist2 ? entry.type2 : '');
@@ -1185,6 +1221,8 @@ async function saveEntry() {
     bpSys: document.getElementById('f-bp-sys').value,
     bpDia: document.getElementById('f-bp-dia').value,
     water: document.getElementById('f-water').value,
+    eaten: document.getElementById('f-eaten')?.value || '',
+    kcalGoal: document.getElementById('f-kcal-goal')?.value || '',
     knee: document.getElementById('f-knee').value,
     shin: document.getElementById('f-shin').value,
     notes: document.getElementById('f-notes').value,
@@ -1275,6 +1313,8 @@ async function editEntry(date) {
   setInput('f-weight', e.weight);
   setInput('f-bp-sys', e.bpSys);
   setInput('f-bp-dia', e.bpDia);
+  setInput('f-eaten', e.eaten);
+  setInput('f-kcal-goal', e.kcalGoal);
   setInput('f-notes', e.notes);
   // Water
   if (e.water) {
@@ -1521,6 +1561,71 @@ function toggleStrengthBlock2(val) {
   const isStrength = val.toLowerCase().includes('kraft');
   document.getElementById('strength-block2').style.display = isStrength ? 'block' : 'none';
 }
+// ── Kcal Helpers ───────────────────────────────────────────────────────────
+// Kalorienverbrauch pro Minute nach Trainingstyp (für 105kg)
+const KCAL_PER_MIN = {
+  'easy run': 9.5,
+  'long run': 9.5,
+  'tempo run': 11.5,
+  'schwelle': 12.0,
+  'intervall': 13.0,
+  'marathonpace': 11.0,
+  'rad': 8.0,
+  'schwimmen': 10.0,
+  'krafttraining ganzkörper': 7.0,
+  'krafttraining oberkörper': 6.0,
+  'krafttraining unterkörper': 7.0,
+  'krafttraining core': 6.5,
+  'yoga / mobility': 4.0,
+  'lauf-abc': 7.0,
+  'stretching': 3.5,
+  'sonstiges': 7.0,
+};
+
+function getKcalPerMin(type) {
+  if (!type) return 0;
+  const key = type.toLowerCase();
+  for (const [k, v] of Object.entries(KCAL_PER_MIN)) {
+    if (key.includes(k)) return v;
+  }
+  return 7.0;
+}
+
+function calcKcalGoal() {
+  const type1 = document.getElementById('f-type')?.value || '';
+  const dur1 = parseInt(document.getElementById('f-dur')?.value) || 0;
+  const type2 = document.getElementById('f-type2')?.value || '';
+  const dur2 = parseInt(document.getElementById('f-dur2')?.value) || 0;
+
+  const sport1 = Math.round(getKcalPerMin(type1) * dur1);
+  const sport2 = Math.round(getKcalPerMin(type2) * dur2);
+  const total = 2200 + sport1 + sport2;
+
+  const el = document.getElementById('f-kcal-goal');
+  if (el) el.value = total;
+  updateKcalPreview();
+  showToast(`Ziel: 2200 Basis + ${sport1}${sport2 ? ' + ' + sport2 : ''} Sport = ${total} kcal`, 'success');
+}
+
+function updateKcalPreview() {
+  const eaten = parseInt(document.getElementById('f-eaten')?.value) || 0;
+  const goal = parseInt(document.getElementById('f-kcal-goal')?.value) || 2200;
+  // kein UI preview nötig — wird beim Speichern im Dashboard angezeigt
+}
+
+async function loadKcalFromErnaehrung() {
+  const today = new Date().toISOString().slice(0,10);
+  const all = await getMeals();
+  const meals = all[today] || [];
+  const total = meals.reduce((a,m) => a+(m.kcal||0), 0);
+  if (total > 0) {
+    document.getElementById('f-eaten').value = total;
+    showToast(`${total} kcal aus Ernährungs-Tab geladen ✓`, 'success');
+  } else {
+    showToast('Keine Mahlzeiten heute im Ernährungs-Tab', 'error');
+  }
+}
+
 // ── Push-ups ───────────────────────────────────────────────────────────────
 const GOGGINS_QUOTES = [
   '„Die meisten Menschen laufen ihrem Potenzial ein Leben lang davon."',
