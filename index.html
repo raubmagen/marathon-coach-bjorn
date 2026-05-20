@@ -346,11 +346,6 @@ tr:hover td { background: var(--bg3); }
           <div class="metric-val" id="d-water">—<span class="metric-unit">L</span></div>
           <div class="metric-trend">Ziel: 3L</div>
         </div>
-        <div class="metric" id="d-kcal-card">
-          <div class="metric-label">Kcal verbleibend 🔥</div>
-          <div class="metric-val" id="d-kcal-remaining" style="font-size:22px">—</div>
-          <div class="metric-trend" id="d-kcal-trend">Heute eintragen</div>
-        </div>
         <div class="metric">
           <div class="metric-label">Letzter Lauf</div>
           <div class="metric-val" id="d-run">—<span class="metric-unit">km</span></div>
@@ -513,6 +508,80 @@ tr:hover td { background: var(--bg3); }
           </div>
         </div>
 
+        <!-- ── ZWEITE EINHEIT ── -->
+        <div class="section-sep"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+          <div class="section-label" style="margin-bottom:0">Zweite Einheit <span style="font-weight:400;text-transform:none;font-size:12px;color:var(--text3)">(optional)</span></div>
+          <button class="btn btn-secondary" onclick="toggleSecondUnit()" id="btn-second-unit" style="padding:4px 12px;font-size:12px">+ Zweite Einheit</button>
+        </div>
+        <div id="second-unit-block" style="display:none">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Einheit</label>
+              <select id="f-type2" onchange="toggleStrengthBlock2(this.value)">
+                <option value="">— keine —</option>
+                <option>Easy Run</option>
+                <option>Tempo Run</option>
+                <option>Long Run</option>
+                <option>Intervall</option>
+                <option>Schwelle</option>
+                <option>Marathonpace</option>
+                <option>Rad</option>
+                <option>Schwimmen</option>
+                <option>Krafttraining Ganzkörper</option>
+                <option>Krafttraining Oberkörper</option>
+                <option>Krafttraining Unterkörper</option>
+                <option>Krafttraining Core</option>
+                <option>Yoga / Mobility</option>
+                <option>Lauf-ABC</option>
+                <option>Stretching</option>
+                <option>Sonstiges</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Distanz <span>(km, nur Laufen/Rad)</span></label>
+              <input type="number" id="f-dist2" placeholder="10.5" step="0.1" min="0">
+            </div>
+            <div class="form-group">
+              <label>Dauer <span>(Minuten)</span></label>
+              <input type="number" id="f-dur2" placeholder="45" min="0">
+            </div>
+            <div class="form-group">
+              <label>Ø Pace <span>(min:sec / km)</span></label>
+              <input type="text" id="f-pace2" placeholder="6:13">
+            </div>
+            <div class="form-group">
+              <label>RPE — Anstrengung <span>(1–10)</span></label>
+              <div class="range-row">
+                <input type="range" min="1" max="10" value="5" id="f-rpe2" oninput="document.getElementById('f-rpe2-v').textContent=this.value">
+                <span class="range-val" id="f-rpe2-v">5</span>
+              </div>
+            </div>
+          </div>
+          <div id="strength-block2" style="display:none">
+            <div class="section-sep" style="margin:0.75rem 0"></div>
+            <div class="section-label">Krafttraining 2 — Details</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Sätze gesamt</label>
+                <input type="number" id="f-sets2" placeholder="15" min="1" max="60">
+              </div>
+              <div class="form-group">
+                <label>Schwerste Übung</label>
+                <input type="text" id="f-mainex2" placeholder="z.B. Kniebeugen, Kreuzheben">
+              </div>
+              <div class="form-group">
+                <label>Max. Gewicht <span>(kg)</span></label>
+                <input type="number" id="f-maxkg2" placeholder="80" step="2.5" min="0">
+              </div>
+              <div class="form-group full">
+                <label>Übungen <span>(kommagetrennt)</span></label>
+                <input type="text" id="f-exercises2" placeholder="z.B. Squat, Deadlift, Rudern, Plank">
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="section-sep"></div>
         <div class="section-label">Körper & Befinden</div>
         <div class="form-grid">
@@ -535,14 +604,6 @@ tr:hover td { background: var(--bg3); }
               <input type="range" min="0" max="5" step="0.25" value="0" id="f-water" oninput="document.getElementById('f-water-v').textContent=this.value+'L'">
               <span class="range-val" id="f-water-v" style="min-width:36px">0L</span>
             </div>
-          </div>
-          <div class="form-group">
-            <label>Ziel-Kcal <span>(Standard: 2200)</span></label>
-            <input type="number" id="f-kcal-goal" placeholder="2200" min="1200" max="4000" step="50">
-          </div>
-          <div class="form-group">
-            <label>Gegessen <span>(kcal heute)</span></label>
-            <input type="number" id="f-kcal-eaten" placeholder="0" min="0" max="6000" step="10">
           </div>
           <div class="form-group">
             <label>Knie rechts <span>(1=Schmerz, 10=OK)</span></label>
@@ -607,9 +668,6 @@ tr:hover td { background: var(--bg3); }
           <div class="empty-icon">≡</div>
           <div class="empty-text">Noch keine Einträge. Starte mit dem ersten Tageseintrag.</div>
         </div>
-      <div style="margin-top:1rem;display:flex;justify-content:flex-end">
-        <button class="btn btn-secondary" style="padding:6px 14px;font-size:12px" onclick="exportHistory()">📥 CSV exportieren</button>
-      </div>
       </div>
     </div>
 
@@ -1096,35 +1154,6 @@ async function renderDashboard() {
     waterEl.closest('.metric').className = 'metric ' + (w >= 3 ? 'green' : w >= 2 ? 'amber' : 'red');
   }
   document.getElementById('d-run').innerHTML = (entry.dist || '—') + '<span class="metric-unit">km</span>';
-
-  // Kcal verbleibend
-  const kcalEl = document.getElementById('d-kcal-remaining');
-  const kcalTrend = document.getElementById('d-kcal-trend');
-  const kcalCard = document.getElementById('d-kcal-card');
-  if (kcalEl) {
-    const goal = parseInt(entry.kcalGoal) || 2200;
-    const eaten = parseInt(entry.kcalEaten) || 0;
-    let sportBonus = 0;
-    const trainType = (entry.type || '').toLowerCase();
-    const dist = parseFloat(entry.dist) || 0;
-    if (trainType.includes('long') || dist >= 20) sportBonus = 400;
-    else if (trainType.includes('intervall') || trainType.includes('tempo')) sportBonus = 300;
-    else if (trainType && trainType !== '') sportBonus = 200;
-    const effective = goal + sportBonus;
-    const remaining = effective - eaten;
-    const pct = eaten > 0 ? Math.round((eaten / effective) * 100) : 0;
-    if (eaten === 0) {
-      kcalEl.innerHTML = '—';
-      if (kcalTrend) kcalTrend.textContent = 'Ziel: ' + goal.toLocaleString('de-DE') + ' kcal';
-      if (kcalCard) kcalCard.className = 'metric';
-    } else {
-      kcalEl.innerHTML = Math.max(0, remaining).toLocaleString('de-DE') + '<span class="metric-unit" style="font-size:11px"> kcal</span>';
-      let trend = pct + '% von ' + goal.toLocaleString('de-DE');
-      if (sportBonus > 0) trend += ' +' + sportBonus + ' Sport';
-      if (kcalTrend) kcalTrend.textContent = trend;
-      if (kcalCard) kcalCard.className = 'metric ' + (remaining < 0 ? 'red' : remaining < 300 ? 'amber' : 'green');
-    }
-  }
   document.getElementById('d-run-t').textContent = entry.pace ? entry.pace + ' min/km' : '';
 
   if (entry.aiRec) {
@@ -1152,11 +1181,19 @@ async function saveEntry() {
     bpSys: document.getElementById('f-bp-sys').value,
     bpDia: document.getElementById('f-bp-dia').value,
     water: document.getElementById('f-water').value,
-    kcalGoal: document.getElementById('f-kcal-goal').value,
-    kcalEaten: document.getElementById('f-kcal-eaten').value,
     knee: document.getElementById('f-knee').value,
     shin: document.getElementById('f-shin').value,
     notes: document.getElementById('f-notes').value,
+    // Zweite Einheit
+    type2: document.getElementById('f-type2')?.value || '',
+    dist2: document.getElementById('f-dist2')?.value || '',
+    dur2: document.getElementById('f-dur2')?.value || '',
+    pace2: document.getElementById('f-pace2')?.value || '',
+    rpe2: document.getElementById('f-rpe2')?.value || '',
+    sets2: document.getElementById('f-sets2')?.value || '',
+    mainex2: document.getElementById('f-mainex2')?.value || '',
+    maxkg2: document.getElementById('f-maxkg2')?.value || '',
+    exercises2: document.getElementById('f-exercises2')?.value || '',
     ts: Date.now()
   };
   showToast('Speichern...', '');
@@ -1185,7 +1222,7 @@ async function renderHistory() {
       <td>${e.bb || '—'}</td>
       <td>${e.sleep || '—'}</td>
       <td>${e.hrv ? e.hrv + ' ms' : '—'}</td>
-      <td>${e.type ? `<span class="pill pill-blue">${e.type}</span>` : '<span class="pill pill-gray">Pause</span>'}</td>
+      <td>${e.type ? `<span class="pill pill-blue">${e.type}</span>${e.type2 ? `<br><span class="pill pill-gray" style="font-size:10px;margin-top:2px">${e.type2}</span>` : ''}` : '<span class="pill pill-gray">Pause</span>'}</td>
       <td>${e.dist || '—'}</td>
       <td>${e.pace || '—'}</td>
       <td>${e.knee ? kneePill(e.knee) : '—'}</td>
@@ -1233,8 +1270,6 @@ async function editEntry(date) {
   setInput('f-pace', e.pace);
   setInput('f-weight', e.weight);
   setInput('f-bp-sys', e.bpSys);
-  setInput('f-kcal-goal', e.kcalGoal);
-  setInput('f-kcal-eaten', e.kcalEaten);
   setInput('f-bp-dia', e.bpDia);
   setInput('f-notes', e.notes);
   // Water
@@ -1257,6 +1292,21 @@ async function editEntry(date) {
   }
 
   showToast('Eintrag vom ' + date + ' geladen — jetzt bearbeiten & speichern ✏️', 'success');
+  // Second unit
+  if (e.type2) {
+    document.getElementById('second-unit-block').style.display = 'block';
+    document.getElementById('btn-second-unit').textContent = '− Zweite Einheit entfernen';
+    const type2El = document.getElementById('f-type2');
+    if (type2El) { type2El.value = e.type2; toggleStrengthBlock2(e.type2); }
+    setInput('f-dist2', e.dist2);
+    setInput('f-dur2', e.dur2);
+    setInput('f-pace2', e.pace2);
+    if (e.rpe2) { const r = document.getElementById('f-rpe2'); if(r) { r.value = e.rpe2; document.getElementById('f-rpe2-v').textContent = e.rpe2; } }
+    setInput('f-sets2', e.sets2);
+    setInput('f-mainex2', e.mainex2);
+    setInput('f-maxkg2', e.maxkg2);
+    setInput('f-exercises2', e.exercises2);
+  }
 }
 async function deleteEntry(date) {
   if (!confirm('Eintrag vom ' + date + ' löschen?')) return;
@@ -1453,6 +1503,19 @@ function showToast(msg, type='') {
 function toggleStrengthBlock(val) {
   const isStrength = val.toLowerCase().includes('kraft');
   document.getElementById('strength-block').style.display = isStrength ? 'block' : 'none';
+}
+
+function toggleSecondUnit() {
+  const block = document.getElementById('second-unit-block');
+  const btn = document.getElementById('btn-second-unit');
+  const visible = block.style.display !== 'none';
+  block.style.display = visible ? 'none' : 'block';
+  btn.textContent = visible ? '+ Zweite Einheit' : '− Zweite Einheit entfernen';
+}
+
+function toggleStrengthBlock2(val) {
+  const isStrength = val.toLowerCase().includes('kraft');
+  document.getElementById('strength-block2').style.display = isStrength ? 'block' : 'none';
 }
 // ── Push-ups ───────────────────────────────────────────────────────────────
 const GOGGINS_QUOTES = [
@@ -1689,30 +1752,6 @@ async function analyzeFood() {
     content.className = 'ai-content';
     content.textContent = 'Fehler: ' + err.message;
   }
-}
-
-// ── Export History ───────────────────────────────────────────────────────
-async function exportHistory() {
-  const entries = (await getEntries()).sort((a,b) => a.date.localeCompare(b.date));
-  if (!entries.length) { showToast('Keine Einträge', 'error'); return; }
-  const cols = ['Datum','Wochentag','Body Battery','Sleep Score','Bereitschaft','Ruhe-HF','Stress','HRV','Einheit','Distanz (km)','Dauer (min)','Pace','RPE','Gewicht (kg)','BP sys','BP dia','Wasser (L)','Kcal Ziel','Kcal gegessen','Knie','Schienbein','Notizen','Ampel'];
-  const wd = ['So','Mo','Di','Mi','Do','Fr','Sa'];
-  const rows = entries.map(e => {
-    const d = new Date(e.date + 'T12:00:00');
-    const bb = parseFloat(e.bb)||0, sl = parseFloat(e.sleep)||0, rd = parseFloat(e.ready)||0;
-    const hrv = parseFloat(e.hrv)||49, rhr = parseFloat(e.rhr)||46;
-    const ampel = (bb>50&&sl>75&&rd>60&&rhr<=51&&hrv>=44)?'GUT':(bb>30&&sl>65&&rhr<=51)?'OK':'VORS.';
-    const note = (e.notes||'').split('\n').join(' ').split(';').join(',');
-    return [e.date,wd[d.getDay()],e.bb||'',e.sleep||'',e.ready||'',e.rhr||'',e.stress||'',e.hrv||'',e.type||'',e.dist||'',e.dur||'',e.pace||'',e.rpe||'',e.weight||'',e.bpSys||'',e.bpDia||'',e.water||'',e.kcalGoal||'',e.kcalEaten||'',e.knee||'',e.shin||'',note,ampel].join(';');
-  });
-  const csv = [cols.join(';')].concat(rows).join('\n');
-  const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8;'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'Trainingsverlauf_Bjorn_' + entries[0].date + '_bis_' + entries[entries.length-1].date + '.csv';
-  a.click();
-  URL.revokeObjectURL(a.href);
-  showToast('Export: ' + entries.length + ' Eintraege ✓', 'success');
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────
