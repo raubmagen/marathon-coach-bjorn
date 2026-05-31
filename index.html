@@ -459,12 +459,12 @@ tr:hover td { background: var(--bg3); }
               <option>Tempo Run</option>
               <option>Long Run</option>
               <option>Intervall</option>
+              <option>Wettkampf</option>
               <option>Rad</option>
               <option>Krafttraining Ganzkörper</option>
               <option>Krafttraining Oberkörper</option>
               <option>Krafttraining Unterkörper</option>
               <option>Krafttraining Core</option>
-              <option>Rad</option>
               <option>Yoga / Mobility</option>
               <option>Sonstiges</option>
             </select>
@@ -531,6 +531,7 @@ tr:hover td { background: var(--bg3); }
                 <option>Intervall</option>
                 <option>Schwelle</option>
                 <option>Marathonpace</option>
+                <option>Wettkampf</option>
                 <option>Rad</option>
                 <option>Schwimmen</option>
                 <option>Krafttraining Ganzkörper</option>
@@ -833,7 +834,9 @@ tr:hover td { background: var(--bg3); }
               <option>Abendessen</option>
               <option>Snack</option>
               <option>Pre-Workout</option>
+              <option>Während des Trainings</option>
               <option>Post-Workout</option>
+              <option>Während des Wettkampfes</option>
             </select>
           </div>
         </div>
@@ -1157,8 +1160,8 @@ async function renderDashboard() {
     }
   }
   // Push-up streak on dashboard
-  const puStreak = await calcPushupStreak();
   const puData = await getPushupData();
+  const puStreak = calcPushupStreakFromData(puData);
   const puToday = puData[new Date().toISOString().slice(0,10)] || 0;
   const streakEl = document.getElementById('d-pushup-streak');
   if (streakEl) {
@@ -1481,10 +1484,10 @@ Gib eine kurze, direkte Trainingsempfehlung für MORGEN (3-4 Sätze). Format: Ei
     content.className = 'ai-content';
     content.textContent = text;
     // Save to today's entry
-    const entries2 = getEntries();
+    const entries2 = await getEntries();
     const todayDate = document.getElementById('f-date').value || new Date().toISOString().slice(0,10);
-    const idx = entries2.findIndex(e => e.date === todayDate);
-    if (idx >= 0) { entries2[idx].aiRec = text; saveEntries(entries2); }
+    const existing = entries2.find(e => e.date === todayDate);
+    if (existing) { existing.aiRec = text; await saveEntryToDb(existing); }
   } catch(err) {
     content.className = 'ai-content';
     content.textContent = 'Fehler: ' + err.message + '\n\nAPI Key in Einstellungen überprüfen.';
@@ -1524,16 +1527,18 @@ async function testAPI() {
     status.textContent = '✗ Fehler: ' + e.message;
   }
 }
-function exportData() {
-  const data = { entries: getEntries(), settings: { ...getSettings(), apiKey: undefined }, exported: new Date().toISOString() };
+async function exportData() {
+  const entries = await getEntries();
+  const data = { entries, settings: { ...getSettings(), apiKey: undefined }, exported: new Date().toISOString() };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
   a.download = 'marathon_coach_export_' + new Date().toISOString().slice(0,10) + '.json';
   a.click();
 }
-function clearData() {
+async function clearData() {
   if (!confirm('Wirklich ALLE Einträge löschen? Das kann nicht rückgängig gemacht werden.')) return;
-  localStorage.removeItem('mc_entries');
+  if (!currentUser) return;
+  await supa.from('entries').delete().eq('user_id', currentUser.id);
   showToast('Daten gelöscht');
   renderHistory();
 }
@@ -1666,8 +1671,7 @@ async function savePushups() {
   await renderPushups();
   showToast('Push-ups gespeichert 💪', 'success');
 }
-async function calcPushupStreak() {
-  const data = await getPushupData();
+function calcPushupStreakFromData(data) {
   let streak = 0;
   const today = new Date();
   for (let i = 0; i < 365; i++) {
@@ -1677,6 +1681,10 @@ async function calcPushupStreak() {
     else if (i > 0) break;
   }
   return streak;
+}
+async function calcPushupStreak() {
+  const data = await getPushupData();
+  return calcPushupStreakFromData(data);
 }
 async function renderPushups() {
   const data = await getPushupData();
