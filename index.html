@@ -268,7 +268,7 @@ tr:hover td { background: var(--bg3); }
         <span class="nav-icon">◎</span> Charts
       </div>
       <div class="nav-item" onclick="showView('pushups')">
-        <span class="nav-icon">💪</span> Push-ups
+        <span class="nav-icon">💪</span> Morgenroutine
       </div>
       <div class="nav-item" onclick="showView('ernaehrung')">
         <span class="nav-icon">🍽️</span> Ernährung
@@ -357,9 +357,9 @@ tr:hover td { background: var(--bg3); }
           <div class="metric-trend">Ziel: &lt;130/80</div>
         </div>
         <div class="metric blue">
-          <div class="metric-label">Push-up Streak</div>
-          <div class="metric-val" id="d-pushup-streak">—<span class="metric-unit">🔥</span></div>
-          <div class="metric-trend" id="d-pushup-today">Heute: — Reps</div>
+          <div class="metric-label">Morgenroutine 🔥</div>
+          <div class="metric-val" id="d-pushup-streak" style="font-size:22px">—</div>
+          <div class="metric-trend" id="d-pushup-today">PU · SIT · KB Streak</div>
         </div>
         <div class="metric" id="d-kcal-tile">
           <div class="metric-label">Kcal verbleibend 🍽️</div>
@@ -368,12 +368,26 @@ tr:hover td { background: var(--bg3); }
         </div>
       </div>
 
-      <!-- Big Push-up Counter -->
-      <div class="card" style="text-align:center;padding:1.5rem;margin-bottom:1.25rem">
-        <div style="font-size:12px;font-weight:700;letter-spacing:0.1em;color:var(--text3);margin-bottom:0.5rem">PUSH-UPS HEUTE</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:80px;font-weight:700;color:var(--accent);line-height:1" id="d-pushup-big">0</div>
-        <div style="font-size:13px;color:var(--text3);margin-top:0.25rem">Ziel: täglich! 💪</div>
-        <button class="btn btn-secondary" onclick="showView('pushups')" style="margin-top:0.75rem;font-size:12px">+ Reps eintragen</button>
+      <!-- Morgenroutine Counter -->
+      <div class="card" style="padding:1.25rem;margin-bottom:1.25rem">
+        <div style="font-size:12px;font-weight:700;letter-spacing:0.1em;color:var(--text3);margin-bottom:1rem;text-align:center">MORGENROUTINE HEUTE · Ziel: 100 Reps je Übung</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;text-align:center;margin-bottom:1rem">
+          <div>
+            <div style="font-size:11px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.06em">Push-ups 💪</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:64px;font-weight:700;color:var(--accent);line-height:1" id="d-pushup-big">0</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.06em">Situps 🏋️</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:64px;font-weight:700;color:var(--accent);line-height:1" id="d-situp-big">0</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.06em">Kniebeugen 🦵</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:64px;font-weight:700;color:var(--accent);line-height:1" id="d-squat-big">0</div>
+          </div>
+        </div>
+        <div style="text-align:center">
+          <button class="btn btn-secondary" onclick="showView('pushups')" style="font-size:12px">+ Reps eintragen</button>
+        </div>
       </div>
 
       <div id="ai-daily-box" class="ai-box" style="display:none">
@@ -412,24 +426,15 @@ tr:hover td { background: var(--bg3); }
         <div class="form-grid">
           <div class="form-group">
             <label>Body Battery <span>(0–100)</span></label>
-            <div class="range-row">
-              <input type="range" min="0" max="100" value="66" id="f-bb" oninput="document.getElementById('f-bb-v').textContent=this.value">
-              <span class="range-val" id="f-bb-v">66</span>
-            </div>
+            <input type="number" id="f-bb" placeholder="66" min="0" max="100">
           </div>
           <div class="form-group">
             <label>Sleep Score <span>(0–100)</span></label>
-            <div class="range-row">
-              <input type="range" min="0" max="100" value="80" id="f-sleep" oninput="document.getElementById('f-sleep-v').textContent=this.value">
-              <span class="range-val" id="f-sleep-v">80</span>
-            </div>
+            <input type="number" id="f-sleep" placeholder="80" min="0" max="100">
           </div>
           <div class="form-group">
             <label>Trainingsbereitschaft <span>(0–100)</span></label>
-            <div class="range-row">
-              <input type="range" min="0" max="100" value="70" id="f-ready" oninput="document.getElementById('f-ready-v').textContent=this.value">
-              <span class="range-val" id="f-ready-v">70</span>
-            </div>
+            <input type="number" id="f-ready" placeholder="70" min="0" max="100">
           </div>
           <div class="form-group">
             <label>Ruhe-Herzfrequenz <span>(bpm)</span></label>
@@ -437,10 +442,7 @@ tr:hover td { background: var(--bg3); }
           </div>
           <div class="form-group">
             <label>Stress <span>(0–100)</span></label>
-            <div class="range-row">
-              <input type="range" min="0" max="100" value="20" id="f-stress" oninput="document.getElementById('f-stress-v').textContent=this.value">
-              <span class="range-val" id="f-stress-v">20</span>
-            </div>
+            <input type="number" id="f-stress" placeholder="20" min="0" max="100">
           </div>
           <div class="form-group">
             <label>HRV <span>(ms, optional)</span></label>
@@ -459,8 +461,8 @@ tr:hover td { background: var(--bg3); }
               <option>Tempo Run</option>
               <option>Long Run</option>
               <option>Intervall</option>
-              <option>Wettkampf</option>
               <option>Rad</option>
+              <option>Schwimmen</option>
               <option>Krafttraining Ganzkörper</option>
               <option>Krafttraining Oberkörper</option>
               <option>Krafttraining Unterkörper</option>
@@ -483,10 +485,7 @@ tr:hover td { background: var(--bg3); }
           </div>
           <div class="form-group">
             <label>RPE — Anstrengung <span>(1–10)</span></label>
-            <div class="range-row">
-              <input type="range" min="1" max="10" value="6" id="f-rpe" oninput="document.getElementById('f-rpe-v').textContent=this.value">
-              <span class="range-val" id="f-rpe-v">6</span>
-            </div>
+            <input type="number" id="f-rpe" placeholder="6" min="1" max="10">
           </div>
         </div>
 
@@ -531,7 +530,6 @@ tr:hover td { background: var(--bg3); }
                 <option>Intervall</option>
                 <option>Schwelle</option>
                 <option>Marathonpace</option>
-                <option>Wettkampf</option>
                 <option>Rad</option>
                 <option>Schwimmen</option>
                 <option>Krafttraining Ganzkörper</option>
@@ -558,10 +556,7 @@ tr:hover td { background: var(--bg3); }
             </div>
             <div class="form-group">
               <label>RPE — Anstrengung <span>(1–10)</span></label>
-              <div class="range-row">
-                <input type="range" min="1" max="10" value="5" id="f-rpe2" oninput="document.getElementById('f-rpe2-v').textContent=this.value">
-                <span class="range-val" id="f-rpe2-v">5</span>
-              </div>
+              <input type="number" id="f-rpe2" placeholder="5" min="1" max="10">
             </div>
           </div>
           <div id="strength-block2" style="display:none">
@@ -620,10 +615,7 @@ tr:hover td { background: var(--bg3); }
           </div>
           <div class="form-group">
             <label>Wasser <span>(Liter, Ziel: 3L)</span></label>
-            <div class="range-row">
-              <input type="range" min="0" max="5" step="0.25" value="0" id="f-water" oninput="document.getElementById('f-water-v').textContent=this.value+'L'">
-              <span class="range-val" id="f-water-v" style="min-width:36px">0L</span>
-            </div>
+            <input type="number" id="f-water" placeholder="0" min="0" max="5" step="0.25">
           </div>
           <div class="form-group">
             <label>Knie rechts <span>(1=Schmerz, 10=OK)</span></label>
@@ -724,60 +716,116 @@ tr:hover td { background: var(--bg3); }
       </div>
     </div>
 
-    <!-- ══ PUSH-UPS ══ -->
+    <!-- ══ MORGENROUTINE ══ -->
     <div id="view-pushups" class="view">
-      <div class="page-title">Push-ups</div>
-      <div class="page-sub">Der innere Goggins schaut zu 👀</div>
+      <div class="page-title">Morgenroutine</div>
+      <div class="page-sub">Ziel: 4×25 pro Übung (100 Reps) — Der innere Goggins schaut zu 👀</div>
 
-      <div class="grid-2" style="margin-bottom:1.25rem">
+      <div class="grid-3" style="margin-bottom:1.25rem">
+        <!-- Push-ups -->
         <div class="card" style="text-align:center">
-          <div class="card-title">Heute</div>
-          <div class="pushup-counter">
-            <div class="pushup-big" id="pu-today-count">0</div>
+          <div class="card-title">Push-ups 💪</div>
+          <div class="pushup-counter" style="gap:0.75rem;padding:0.5rem 0">
+            <div class="pushup-big" id="pu-today-count" style="font-size:72px">0</div>
+            <div style="font-size:12px;color:var(--text3)">von 100 · 🔥 <span id="pu-streak-inline" style="color:var(--amber)">0</span> Tage</div>
             <div class="pushup-controls">
-              <button class="btn-round" onclick="adjustPushups(-10)" title="-10">−10</button>
-              <button class="btn-round" onclick="adjustPushups(-1)" title="-1">−</button>
-              <button class="btn-round big" onclick="adjustPushups(1)" title="+1">+</button>
-              <button class="btn-round" onclick="adjustPushups(10)" title="+10">+10</button>
+              <button class="btn-round" onclick="adjustPushups(-1)">−</button>
+              <button class="btn-round big" onclick="adjustPushups(1)">+</button>
+              <button class="btn-round" onclick="adjustPushups(10)">+10</button>
             </div>
-            <div style="display:flex;gap:1rem;margin-top:0.5rem">
-              <button class="btn btn-secondary" onclick="setPushupPreset(20)">+20</button>
-              <button class="btn btn-secondary" onclick="setPushupPreset(50)">+50</button>
-              <button class="btn btn-secondary" onclick="setPushupPreset(100)">+100</button>
-              <button class="btn btn-danger" onclick="resetTodayPushups()" style="padding:10px 14px">↺</button>
+            <div style="display:flex;gap:0.5rem;justify-content:center">
+              <button class="btn btn-secondary" style="font-size:12px;padding:6px 10px" onclick="setPushupPreset(25)">+25</button>
+              <button class="btn btn-secondary" style="font-size:12px;padding:6px 10px" onclick="setPushupPreset(50)">+50</button>
+              <button class="btn btn-danger" style="padding:6px 10px;font-size:12px" onclick="resetTodayPushups()">↺</button>
             </div>
-          </div>
-          <button class="btn btn-primary" onclick="savePushups()" style="margin-top:0.5rem;width:80%">Speichern ✓</button>
-        </div>
-        <div class="card">
-          <div class="card-title">Streak & Stats</div>
-          <div class="pushup-counter" style="gap:0.75rem">
-            <div class="streak-display">
-              <span class="streak-flame">🔥</span>
-              <span class="streak-num" id="pu-streak">0</span>
-              <span class="streak-label">Tage in Folge</span>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;width:100%">
-              <div style="text-align:center;padding:0.75rem;background:var(--bg3);border-radius:8px">
-                <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--green)" id="pu-total">0</div>
-                <div style="font-size:11px;color:var(--text3)">GESAMT</div>
-              </div>
-              <div style="text-align:center;padding:0.75rem;background:var(--bg3);border-radius:8px">
-                <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--accent)" id="pu-avg">0</div>
-                <div style="font-size:11px;color:var(--text3)">Ø PRO TAG</div>
-              </div>
-              <div style="text-align:center;padding:0.75rem;background:var(--bg3);border-radius:8px">
-                <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--amber)" id="pu-best">0</div>
-                <div style="font-size:11px;color:var(--text3)">BESTER TAG</div>
-              </div>
-              <div style="text-align:center;padding:0.75rem;background:var(--bg3);border-radius:8px">
-                <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--red)" id="pu-days">0</div>
-                <div style="font-size:11px;color:var(--text3)">AKTIVE TAGE</div>
-              </div>
-            </div>
-            <div class="goggins-quote" id="pu-goggins-quote">„Die einzige Person, die dich aufhalten kann, bist du selbst."</div>
+            <button class="btn btn-primary" onclick="savePushups()" style="width:100%">Speichern ✓</button>
           </div>
         </div>
+        <!-- Situps -->
+        <div class="card" style="text-align:center">
+          <div class="card-title">Situps 🏋️</div>
+          <div class="pushup-counter" style="gap:0.75rem;padding:0.5rem 0">
+            <div class="pushup-big" id="sit-today-count" style="font-size:72px">0</div>
+            <div style="font-size:12px;color:var(--text3)">von 100 · 🔥 <span id="sit-streak-inline" style="color:var(--amber)">0</span> Tage</div>
+            <div class="pushup-controls">
+              <button class="btn-round" onclick="adjustSitups(-1)">−</button>
+              <button class="btn-round big" onclick="adjustSitups(1)">+</button>
+              <button class="btn-round" onclick="adjustSitups(10)">+10</button>
+            </div>
+            <div style="display:flex;gap:0.5rem;justify-content:center">
+              <button class="btn btn-secondary" style="font-size:12px;padding:6px 10px" onclick="setSitupPreset(25)">+25</button>
+              <button class="btn btn-secondary" style="font-size:12px;padding:6px 10px" onclick="setSitupPreset(50)">+50</button>
+              <button class="btn btn-danger" style="padding:6px 10px;font-size:12px" onclick="resetTodaySitups()">↺</button>
+            </div>
+            <button class="btn btn-primary" onclick="saveSitups()" style="width:100%">Speichern ✓</button>
+          </div>
+        </div>
+        <!-- Kniebeugen -->
+        <div class="card" style="text-align:center">
+          <div class="card-title">Kniebeugen 🦵</div>
+          <div class="pushup-counter" style="gap:0.75rem;padding:0.5rem 0">
+            <div class="pushup-big" id="sq-today-count" style="font-size:72px">0</div>
+            <div style="font-size:12px;color:var(--text3)">von 100 · 🔥 <span id="sq-streak-inline" style="color:var(--amber)">0</span> Tage</div>
+            <div class="pushup-controls">
+              <button class="btn-round" onclick="adjustSquats(-1)">−</button>
+              <button class="btn-round big" onclick="adjustSquats(1)">+</button>
+              <button class="btn-round" onclick="adjustSquats(10)">+10</button>
+            </div>
+            <div style="display:flex;gap:0.5rem;justify-content:center">
+              <button class="btn btn-secondary" style="font-size:12px;padding:6px 10px" onclick="setSquatPreset(25)">+25</button>
+              <button class="btn btn-secondary" style="font-size:12px;padding:6px 10px" onclick="setSquatPreset(50)">+50</button>
+              <button class="btn btn-danger" style="padding:6px 10px;font-size:12px" onclick="resetTodaySquats()">↺</button>
+            </div>
+            <button class="btn btn-primary" onclick="saveSquats()" style="width:100%">Speichern ✓</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="card" style="margin-bottom:1.25rem">
+        <div class="card-title">Streak & Gesamtstatistik</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem">
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:0.5rem;text-align:center">Push-ups</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+              <div style="text-align:center;padding:0.75rem 0.5rem;background:var(--bg3);border-radius:8px">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--amber)" id="pu-streak">0</div>
+                <div style="font-size:10px;color:var(--text3)">🔥 STREAK</div>
+              </div>
+              <div style="text-align:center;padding:0.75rem 0.5rem;background:var(--bg3);border-radius:8px">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--green)" id="pu-total">0</div>
+                <div style="font-size:10px;color:var(--text3)">GESAMT</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:0.5rem;text-align:center">Situps</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+              <div style="text-align:center;padding:0.75rem 0.5rem;background:var(--bg3);border-radius:8px">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--amber)" id="sit-streak">0</div>
+                <div style="font-size:10px;color:var(--text3)">🔥 STREAK</div>
+              </div>
+              <div style="text-align:center;padding:0.75rem 0.5rem;background:var(--bg3);border-radius:8px">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--green)" id="sit-total">0</div>
+                <div style="font-size:10px;color:var(--text3)">GESAMT</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:0.5rem;text-align:center">Kniebeugen</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+              <div style="text-align:center;padding:0.75rem 0.5rem;background:var(--bg3);border-radius:8px">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--amber)" id="sq-streak">0</div>
+                <div style="font-size:10px;color:var(--text3)">🔥 STREAK</div>
+              </div>
+              <div style="text-align:center;padding:0.75rem 0.5rem;background:var(--bg3);border-radius:8px">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--green)" id="sq-total">0</div>
+                <div style="font-size:10px;color:var(--text3)">GESAMT</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="goggins-quote" id="pu-goggins-quote" style="margin-top:1rem">„Die einzige Person, die dich aufhalten kann, bist du selbst."</div>
       </div>
 
       <div class="card">
@@ -834,9 +882,7 @@ tr:hover td { background: var(--bg3); }
               <option>Abendessen</option>
               <option>Snack</option>
               <option>Pre-Workout</option>
-              <option>Während des Trainings</option>
               <option>Post-Workout</option>
-              <option>Während des Wettkampfes</option>
             </select>
           </div>
         </div>
@@ -1051,6 +1097,42 @@ async function saveMealsForDate(date, meals) {
   }
 }
 
+// ── Storage — Situps ──────────────────────────────────────────────────────
+async function getSitupsData() {
+  if (!currentUser) return {};
+  const { data } = await supa.from('situps').select('*').eq('user_id', currentUser.id);
+  const result = {};
+  (data || []).forEach(r => { result[r.date] = r.reps; });
+  return result;
+}
+async function saveSitupsDay(date, reps) {
+  if (!currentUser) return;
+  const { data: existing } = await supa.from('situps').select('id').eq('user_id', currentUser.id).eq('date', date);
+  if (existing && existing.length > 0) {
+    await supa.from('situps').update({ reps }).eq('id', existing[0].id);
+  } else {
+    await supa.from('situps').insert({ user_id: currentUser.id, date, reps });
+  }
+}
+
+// ── Storage — Squats (Kniebeugen) ─────────────────────────────────────────
+async function getSquatsData() {
+  if (!currentUser) return {};
+  const { data } = await supa.from('squats').select('*').eq('user_id', currentUser.id);
+  const result = {};
+  (data || []).forEach(r => { result[r.date] = r.reps; });
+  return result;
+}
+async function saveSquatsDay(date, reps) {
+  if (!currentUser) return;
+  const { data: existing } = await supa.from('squats').select('id').eq('user_id', currentUser.id).eq('date', date);
+  if (existing && existing.length > 0) {
+    await supa.from('squats').update({ reps }).eq('id', existing[0].id);
+  } else {
+    await supa.from('squats').insert({ user_id: currentUser.id, date, reps });
+  }
+}
+
 // Settings still localStorage (API key should stay local)
 function getSettings() {
   try { return JSON.parse(localStorage.getItem('mc_settings') || '{}'); } catch { return {}; }
@@ -1159,18 +1241,24 @@ async function renderDashboard() {
       else bpEl.textContent = '—';
     }
   }
-  // Push-up streak on dashboard
-  const puData = await getPushupData();
-  const puStreak = calcPushupStreakFromData(puData);
-  const puToday = puData[new Date().toISOString().slice(0,10)] || 0;
+  // Morgenroutine on dashboard
+  const todayKey = new Date().toISOString().slice(0,10);
+  const [puData, sitData, sqData] = await Promise.all([getPushupData(), getSitupsData(), getSquatsData()]);
+  const [puStreak, sitStreak, sqStreak] = await Promise.all([calcPushupStreak(), calcSitupsStreak(), calcSquatsStreak()]);
+  const puToday = puData[todayKey] || 0;
+  const sitToday = sitData[todayKey] || 0;
+  const sqToday = sqData[todayKey] || 0;
   const streakEl = document.getElementById('d-pushup-streak');
   if (streakEl) {
-    streakEl.innerHTML = puStreak + '<span class="metric-unit">🔥</span>';
-    document.getElementById('d-pushup-today').textContent = 'Heute: ' + puToday + ' Reps';
+    streakEl.innerHTML = `${puStreak}🔥 / ${sitStreak}🔥 / ${sqStreak}🔥`;
+    document.getElementById('d-pushup-today').textContent = `PU: ${puToday} · SIT: ${sitToday} · KB: ${sqToday}`;
   }
-  // Big pushup counter
   const bigPu = document.getElementById('d-pushup-big');
   if (bigPu) bigPu.textContent = puToday;
+  const bigSit = document.getElementById('d-situp-big');
+  if (bigSit) bigSit.textContent = sitToday;
+  const bigSq = document.getElementById('d-squat-big');
+  if (bigSq) bigSq.textContent = sqToday;
   // Water
   const waterEl = document.getElementById('d-water');
   if (waterEl) {
@@ -1302,15 +1390,15 @@ async function editEntry(date) {
     const el = document.getElementById(id);
     if (el) { el.value = val || el.defaultValue; document.getElementById(id+'-v').textContent = el.value; }
   };
-  setRange('f-bb', e.bb);
-  setRange('f-sleep', e.sleep);
-  setRange('f-ready', e.ready);
-  setRange('f-stress', e.stress);
-  setRange('f-rpe', e.rpe);
   setRange('f-knee', e.knee);
   setRange('f-shin', e.shin);
 
-  const setInput = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+  const setInput = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined && val !== '') el.value = val; };
+  setInput('f-bb', e.bb);
+  setInput('f-sleep', e.sleep);
+  setInput('f-ready', e.ready);
+  setInput('f-stress', e.stress);
+  setInput('f-rpe', e.rpe);
   setInput('f-rhr', e.rhr);
   setInput('f-hrv', e.hrv);
   setInput('f-dist', e.dist);
@@ -1322,11 +1410,7 @@ async function editEntry(date) {
   setInput('f-eaten', e.eaten);
   setInput('f-kcal-goal', e.kcalGoal);
   setInput('f-notes', e.notes);
-  // Water
-  if (e.water) {
-    const wEl = document.getElementById('f-water');
-    if (wEl) { wEl.value = e.water; document.getElementById('f-water-v').textContent = e.water + 'L'; }
-  }
+  setInput('f-water', e.water);
 
   // Training type
   const typeEl = document.getElementById('f-type');
@@ -1351,7 +1435,7 @@ async function editEntry(date) {
     setInput('f-dist2', e.dist2);
     setInput('f-dur2', e.dur2);
     setInput('f-pace2', e.pace2);
-    if (e.rpe2) { const r = document.getElementById('f-rpe2'); if(r) { r.value = e.rpe2; document.getElementById('f-rpe2-v').textContent = e.rpe2; } }
+    setInput('f-rpe2', e.rpe2);
     setInput('f-sets2', e.sets2);
     setInput('f-mainex2', e.mainex2);
     setInput('f-maxkg2', e.maxkg2);
@@ -1484,10 +1568,10 @@ Gib eine kurze, direkte Trainingsempfehlung für MORGEN (3-4 Sätze). Format: Ei
     content.className = 'ai-content';
     content.textContent = text;
     // Save to today's entry
-    const entries2 = await getEntries();
+    const entries2 = getEntries();
     const todayDate = document.getElementById('f-date').value || new Date().toISOString().slice(0,10);
-    const existing = entries2.find(e => e.date === todayDate);
-    if (existing) { existing.aiRec = text; await saveEntryToDb(existing); }
+    const idx = entries2.findIndex(e => e.date === todayDate);
+    if (idx >= 0) { entries2[idx].aiRec = text; saveEntries(entries2); }
   } catch(err) {
     content.className = 'ai-content';
     content.textContent = 'Fehler: ' + err.message + '\n\nAPI Key in Einstellungen überprüfen.';
@@ -1527,18 +1611,16 @@ async function testAPI() {
     status.textContent = '✗ Fehler: ' + e.message;
   }
 }
-async function exportData() {
-  const entries = await getEntries();
-  const data = { entries, settings: { ...getSettings(), apiKey: undefined }, exported: new Date().toISOString() };
+function exportData() {
+  const data = { entries: getEntries(), settings: { ...getSettings(), apiKey: undefined }, exported: new Date().toISOString() };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
   a.download = 'marathon_coach_export_' + new Date().toISOString().slice(0,10) + '.json';
   a.click();
 }
-async function clearData() {
+function clearData() {
   if (!confirm('Wirklich ALLE Einträge löschen? Das kann nicht rückgängig gemacht werden.')) return;
-  if (!currentUser) return;
-  await supa.from('entries').delete().eq('user_id', currentUser.id);
+  localStorage.removeItem('mc_entries');
   showToast('Daten gelöscht');
   renderHistory();
 }
@@ -1647,19 +1729,16 @@ const GOGGINS_QUOTES = [
 ];
 
 let puTodayTemp = 0;
+let sitTodayTemp = 0;
+let sqTodayTemp = 0;
 
+// ── Push-up counter ────────────────────────────────────────────────────────
 function adjustPushups(n) {
   puTodayTemp = Math.max(0, puTodayTemp + n);
   document.getElementById('pu-today-count').textContent = puTodayTemp;
 }
-function setPushupPreset(n) {
-  puTodayTemp = puTodayTemp + n;
-  document.getElementById('pu-today-count').textContent = puTodayTemp;
-}
-function resetTodayPushups() {
-  puTodayTemp = 0;
-  document.getElementById('pu-today-count').textContent = 0;
-}
+function setPushupPreset(n) { puTodayTemp += n; document.getElementById('pu-today-count').textContent = puTodayTemp; }
+function resetTodayPushups() { puTodayTemp = 0; document.getElementById('pu-today-count').textContent = 0; }
 async function savePushups() {
   const today = new Date().toISOString().slice(0,10);
   const data = await getPushupData();
@@ -1667,52 +1746,105 @@ async function savePushups() {
   showToast('Speichern...', '');
   await savePushupDay(today, newReps);
   puTodayTemp = 0;
-  document.getElementById('pu-today-count').textContent = 0;
   await renderPushups();
   showToast('Push-ups gespeichert 💪', 'success');
 }
-function calcPushupStreakFromData(data) {
+
+// ── Situp counter ──────────────────────────────────────────────────────────
+function adjustSitups(n) {
+  sitTodayTemp = Math.max(0, sitTodayTemp + n);
+  document.getElementById('sit-today-count').textContent = sitTodayTemp;
+}
+function setSitupPreset(n) { sitTodayTemp += n; document.getElementById('sit-today-count').textContent = sitTodayTemp; }
+function resetTodaySitups() { sitTodayTemp = 0; document.getElementById('sit-today-count').textContent = 0; }
+async function saveSitups() {
+  const today = new Date().toISOString().slice(0,10);
+  const data = await getSitupsData();
+  const newReps = (data[today] || 0) + sitTodayTemp;
+  showToast('Speichern...', '');
+  await saveSitupsDay(today, newReps);
+  sitTodayTemp = 0;
+  await renderPushups();
+  showToast('Situps gespeichert 💪', 'success');
+}
+
+// ── Squat (Kniebeugen) counter ─────────────────────────────────────────────
+function adjustSquats(n) {
+  sqTodayTemp = Math.max(0, sqTodayTemp + n);
+  document.getElementById('sq-today-count').textContent = sqTodayTemp;
+}
+function setSquatPreset(n) { sqTodayTemp += n; document.getElementById('sq-today-count').textContent = sqTodayTemp; }
+function resetTodaySquats() { sqTodayTemp = 0; document.getElementById('sq-today-count').textContent = 0; }
+async function saveSquats() {
+  const today = new Date().toISOString().slice(0,10);
+  const data = await getSquatsData();
+  const newReps = (data[today] || 0) + sqTodayTemp;
+  showToast('Speichern...', '');
+  await saveSquatsDay(today, newReps);
+  sqTodayTemp = 0;
+  await renderPushups();
+  showToast('Kniebeugen gespeichert 💪', 'success');
+}
+
+// ── Generic streak calculator ──────────────────────────────────────────────
+async function calcStreak(getData) {
+  const data = await getData();
   let streak = 0;
   const today = new Date();
   for (let i = 0; i < 365; i++) {
     const d = new Date(today); d.setDate(d.getDate() - i);
     const key = d.toISOString().slice(0,10);
-    if (data[key] > 0) streak++;
+    if ((data[key] || 0) > 0) streak++;
     else if (i > 0) break;
   }
   return streak;
 }
-async function calcPushupStreak() {
-  const data = await getPushupData();
-  return calcPushupStreakFromData(data);
-}
+async function calcPushupStreak() { return calcStreak(getPushupData); }
+async function calcSitupsStreak() { return calcStreak(getSitupsData); }
+async function calcSquatsStreak() { return calcStreak(getSquatsData); }
+
 async function renderPushups() {
-  const data = await getPushupData();
+  const [puData, sitData, sqData] = await Promise.all([getPushupData(), getSitupsData(), getSquatsData()]);
   const today = new Date().toISOString().slice(0,10);
-  puTodayTemp = 0;
-  document.getElementById('pu-today-count').textContent = data[today] || 0;
 
-  const vals = Object.values(data).map(Number).filter(v => v > 0);
-  const total = vals.reduce((a,b) => a+b, 0);
-  const best = vals.length ? Math.max(...vals) : 0;
-  const streak = await calcPushupStreak();
-  document.getElementById('pu-streak').textContent = streak;
-  document.getElementById('pu-total').textContent = total;
-  document.getElementById('pu-avg').textContent = vals.length ? Math.round(total / vals.length) : 0;
-  document.getElementById('pu-best').textContent = best;
-  document.getElementById('pu-days').textContent = vals.length;
-  document.getElementById('pu-goggins-quote').textContent = GOGGINS_QUOTES[Math.floor(Math.random() * GOGGINS_QUOTES.length)];
+  puTodayTemp = 0; sitTodayTemp = 0; sqTodayTemp = 0;
 
+  const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+  // Today's saved counts
+  setEl('pu-today-count', puData[today] || 0);
+  setEl('sit-today-count', sitData[today] || 0);
+  setEl('sq-today-count', sqData[today] || 0);
+
+  // Streaks
+  const [puStreak, sitStreak, sqStreak] = await Promise.all([calcPushupStreak(), calcSitupsStreak(), calcSquatsStreak()]);
+  setEl('pu-streak-inline', puStreak); setEl('pu-streak', puStreak);
+  setEl('sit-streak-inline', sitStreak); setEl('sit-streak', sitStreak);
+  setEl('sq-streak-inline', sqStreak); setEl('sq-streak', sqStreak);
+
+  // Totals
+  const sum = data => Object.values(data).map(Number).filter(v => v > 0).reduce((a,b) => a+b, 0);
+  setEl('pu-total', sum(puData));
+  setEl('sit-total', sum(sitData));
+  setEl('sq-total', sum(sqData));
+
+  setEl('pu-goggins-quote', GOGGINS_QUOTES[Math.floor(Math.random() * GOGGINS_QUOTES.length)]);
+
+  // 14-day history — all 3
   const hist = document.getElementById('pu-history');
   let html = '';
   for (let i = 0; i < 14; i++) {
     const d = new Date(); d.setDate(d.getDate() - i);
     const key = d.toISOString().slice(0,10);
-    const reps = data[key] || 0;
+    const pu = puData[key] || 0, sit = sitData[key] || 0, sq = sqData[key] || 0;
     const fmt = d.toLocaleDateString('de-DE', {weekday:'short', day:'2-digit', month:'2-digit'});
     html += `<div class="pushup-history-row">
       <span style="color:var(--text)">${fmt}${i===0?' <span style="color:var(--accent);font-size:11px">HEUTE</span>':''}</span>
-      <span class="${reps>0?'pushup-day-done':'pushup-day-zero'}">${reps>0?reps+' Reps 💪':'—'}</span>
+      <span style="display:flex;gap:1rem">
+        <span class="${pu>0?'pushup-day-done':'pushup-day-zero'}" style="min-width:55px">PU: ${pu||'—'}</span>
+        <span class="${sit>0?'pushup-day-done':'pushup-day-zero'}" style="min-width:60px">SIT: ${sit||'—'}</span>
+        <span class="${sq>0?'pushup-day-done':'pushup-day-zero'}" style="min-width:55px">KB: ${sq||'—'}</span>
+      </span>
     </div>`;
   }
   hist.innerHTML = html;
