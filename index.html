@@ -270,6 +270,9 @@ tr:hover td { background: var(--bg3); }
       <div class="nav-item" onclick="showView('pushups')">
         <span class="nav-icon">💪</span> Morgenroutine
       </div>
+      <div class="nav-item" onclick="showView('bahnen')">
+        <span class="nav-icon">🏊</span> Bahnen
+      </div>
       <div class="nav-item" onclick="showView('ernaehrung')">
         <span class="nav-icon">🍽️</span> Ernährung
       </div>
@@ -834,6 +837,63 @@ tr:hover td { background: var(--bg3); }
       </div>
     </div>
 
+    <!-- ══ BAHNEN ══ -->
+    <div id="view-bahnen" class="view">
+      <div class="page-title">Bahnen</div>
+      <div class="page-sub">Rein zufällig im Schwimmbad 🏊</div>
+
+      <div class="grid-2" style="margin-bottom:1.25rem">
+        <div class="card" style="text-align:center">
+          <div class="card-title">Heute</div>
+          <div class="pushup-counter" style="gap:0.75rem;padding:0.5rem 0">
+            <div class="pushup-big" id="bahn-today-count" style="font-size:72px">0</div>
+            <div style="font-size:13px;color:var(--text2)"><span id="bahn-today-m">0</span> m · 🔥 <span id="bahn-streak-inline" style="color:var(--amber)">0</span> Tage</div>
+            <div style="font-size:11px;color:var(--text3)">Bahnen (je 50m)</div>
+            <div class="pushup-controls">
+              <button class="btn-round" onclick="adjustBahnen(-1)">−</button>
+              <button class="btn-round big" onclick="adjustBahnen(1)">+</button>
+              <button class="btn-round" onclick="adjustBahnen(5)">+5</button>
+            </div>
+            <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap">
+              <button class="btn btn-secondary" style="font-size:12px;padding:6px 10px" onclick="setBahnenPreset(10)">+10</button>
+              <button class="btn btn-secondary" style="font-size:12px;padding:6px 10px" onclick="setBahnenPreset(20)">+20</button>
+              <button class="btn btn-secondary" style="font-size:12px;padding:6px 10px" onclick="setBahnenPreset(30)">+30</button>
+              <button class="btn btn-danger" style="padding:6px 10px;font-size:12px" onclick="resetTodayBahnen()">↺</button>
+            </div>
+            <button class="btn btn-primary" onclick="saveBahnen()" style="width:100%">Speichern ✓</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Streak & Stats</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem">
+            <div style="text-align:center;padding:0.75rem;background:var(--bg3);border-radius:8px">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--amber)" id="bahn-streak">0</div>
+              <div style="font-size:11px;color:var(--text3)">🔥 STREAK</div>
+            </div>
+            <div style="text-align:center;padding:0.75rem;background:var(--bg3);border-radius:8px">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--green)" id="bahn-total">0</div>
+              <div style="font-size:11px;color:var(--text3)">BAHNEN GESAMT</div>
+            </div>
+            <div style="text-align:center;padding:0.75rem;background:var(--bg3);border-radius:8px">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--accent)" id="bahn-total-km">0</div>
+              <div style="font-size:11px;color:var(--text3)">KM GESAMT</div>
+            </div>
+            <div style="text-align:center;padding:0.75rem;background:var(--bg3);border-radius:8px">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--red)" id="bahn-best">0</div>
+              <div style="font-size:11px;color:var(--text3)">BESTER TAG</div>
+            </div>
+          </div>
+          <div class="goggins-quote" style="border-left-color:var(--accent)">„Das Wasser weiß nicht, dass du keine Triathletin bist." — niemand</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Letzte 14 Tage</div>
+        <div id="bahn-history" style="padding:0.25rem 0"></div>
+      </div>
+    </div>
+
     <!-- ══ ERNÄHRUNG ══ -->
     <div id="view-ernaehrung" class="view">
       <div class="page-title">Ernährungsprotokoll</div>
@@ -1133,6 +1193,24 @@ async function saveSquatsDay(date, reps) {
   }
 }
 
+// ── Storage — Bahnen ──────────────────────────────────────────────────────
+async function getBahnenData() {
+  if (!currentUser) return {};
+  const { data } = await supa.from('bahnen').select('*').eq('user_id', currentUser.id);
+  const result = {};
+  (data || []).forEach(r => { result[r.date] = r.reps; });
+  return result;
+}
+async function saveBahnenDay(date, reps) {
+  if (!currentUser) return;
+  const { data: existing } = await supa.from('bahnen').select('id').eq('user_id', currentUser.id).eq('date', date);
+  if (existing && existing.length > 0) {
+    await supa.from('bahnen').update({ reps }).eq('id', existing[0].id);
+  } else {
+    await supa.from('bahnen').insert({ user_id: currentUser.id, date, reps });
+  }
+}
+
 // Settings still localStorage (API key should stay local)
 function getSettings() {
   try { return JSON.parse(localStorage.getItem('mc_settings') || '{}'); } catch { return {}; }
@@ -1152,7 +1230,8 @@ async function showView(id) {
       (id === 'log' && txt.includes('tages')) ||
       (id === 'history' && txt.includes('verlauf')) ||
       (id === 'charts' && txt.includes('chart')) ||
-      (id === 'pushups' && txt.includes('push')) ||
+      (id === 'pushups' && (txt.includes('push') || txt.includes('morgen'))) ||
+      (id === 'bahnen' && txt.includes('bahn')) ||
       (id === 'ernaehrung' && txt.includes('ernähr')) ||
       (id === 'settings' && txt.includes('einstell'))
     ) n.classList.add('active');
@@ -1162,6 +1241,7 @@ async function showView(id) {
   if (id === 'charts') await renderCharts();
   if (id === 'settings') loadSettings();
   if (id === 'pushups') await renderPushups();
+  if (id === 'bahnen') await renderBahnen();
   if (id === 'ernaehrung') await renderErnaehrung();
 }
 
@@ -1800,6 +1880,7 @@ async function calcStreak(getData) {
   return streak;
 }
 async function calcPushupStreak() { return calcStreak(getPushupData); }
+async function calcBahnenStreak() { return calcStreak(getBahnenData); }
 async function calcSitupsStreak() { return calcStreak(getSitupsData); }
 async function calcSquatsStreak() { return calcStreak(getSquatsData); }
 
@@ -1845,6 +1926,61 @@ async function renderPushups() {
         <span class="${sit>0?'pushup-day-done':'pushup-day-zero'}" style="min-width:60px">SIT: ${sit||'—'}</span>
         <span class="${sq>0?'pushup-day-done':'pushup-day-zero'}" style="min-width:55px">KB: ${sq||'—'}</span>
       </span>
+    </div>`;
+  }
+  hist.innerHTML = html;
+}
+
+// ── Bahnen ─────────────────────────────────────────────────────────────────
+let bahnTodayTemp = 0;
+
+function adjustBahnen(n) {
+  bahnTodayTemp = Math.max(0, bahnTodayTemp + n);
+  document.getElementById('bahn-today-count').textContent = bahnTodayTemp;
+  document.getElementById('bahn-today-m').textContent = bahnTodayTemp * 50;
+}
+function setBahnenPreset(n) { bahnTodayTemp += n; adjustBahnen(0); }
+function resetTodayBahnen() { bahnTodayTemp = 0; adjustBahnen(0); }
+async function saveBahnen() {
+  const today = new Date().toISOString().slice(0,10);
+  const data = await getBahnenData();
+  const newReps = (data[today] || 0) + bahnTodayTemp;
+  showToast('Speichern...', '');
+  await saveBahnenDay(today, newReps);
+  bahnTodayTemp = 0;
+  await renderBahnen();
+  showToast('Bahnen gespeichert 🏊', 'success');
+}
+async function renderBahnen() {
+  const data = await getBahnenData();
+  const today = new Date().toISOString().slice(0,10);
+  bahnTodayTemp = 0;
+  const todayVal = data[today] || 0;
+  document.getElementById('bahn-today-count').textContent = todayVal;
+  document.getElementById('bahn-today-m').textContent = todayVal * 50;
+
+  const vals = Object.values(data).map(Number).filter(v => v > 0);
+  const total = vals.reduce((a,b) => a+b, 0);
+  const best = vals.length ? Math.max(...vals) : 0;
+  const streak = await calcBahnenStreak();
+
+  const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  setEl('bahn-streak', streak);
+  setEl('bahn-streak-inline', streak);
+  setEl('bahn-total', total);
+  setEl('bahn-total-km', (total * 50 / 1000).toFixed(1));
+  setEl('bahn-best', best);
+
+  const hist = document.getElementById('bahn-history');
+  let html = '';
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0,10);
+    const reps = data[key] || 0;
+    const fmt = d.toLocaleDateString('de-DE', {weekday:'short', day:'2-digit', month:'2-digit'});
+    html += `<div class="pushup-history-row">
+      <span style="color:var(--text)">${fmt}${i===0?' <span style="color:var(--accent);font-size:11px">HEUTE</span>':''}</span>
+      <span class="${reps>0?'pushup-day-done':'pushup-day-zero'}">${reps>0?reps+' Bahnen ('+reps*50+'m) 🏊':'—'}</span>
     </div>`;
   }
   hist.innerHTML = html;
